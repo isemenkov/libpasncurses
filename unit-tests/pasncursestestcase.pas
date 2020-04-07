@@ -5,18 +5,18 @@ unit pasncursestestcase;
 interface
 
 uses
-  Classes, SysUtils, fpcunit, testutils;
+  Classes, SysUtils, fpcunit, testregistry;
 
 type
 
-  TTestCase= class(TTestCase)
+  TTest = class(TTestCase)
   published
     procedure TestHookUp;
   end;
 
 implementation
 
-procedure TTestCase.TestHookUp;
+procedure TTest.TestHookUp;
 begin
   Fail('Напишите ваш тест');
 end;
@@ -25,6 +25,6 @@ end;
 
 initialization
 
-  RegisterTest(TTestCase);
+  RegisterTest(TTest);
 end.
 

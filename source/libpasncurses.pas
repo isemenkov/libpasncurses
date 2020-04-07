@@ -38,6 +38,7 @@ uses
 {$ENDIF}
 
 const
+  { colors }
   COLOR_BLACK                                                           = 0;
   COLOR_RED                                                             = 1;
   COLOR_GREEN                                                           = 2;
@@ -47,6 +48,27 @@ const
   COLOR_CYAN                                                            = 6;
   COLOR_WHITE                                                           = 7;
 
+  ERR                                                                   = -1;
+  OK                                                                    = 0;
+
+  { values for the _flags member }
+  _SUBWIN       { is this a sub-window? }                               = $01;
+  _ENDLINE      { is the window flush right? }                          = $02;
+  _FULLWIN      { is the window full-screen? }                          = $04;
+  _SCROLLWIN    { bottom edge is at screen bottom? }                    = $08;
+  _ISPAD        { is this window a pad? }                               = $10;
+  _HASMOVED     { has cursor moved since last refresh? }                = $20;
+  _WRAPPED      { cursor was just wrappped }                            = $40;
+
+  { this value is used in the firstchar and lastchar fields to mark
+    unchanged lines }
+  _NOCHANGE                                                             = -1;
+
+  { this value is used in the oldindex field to mark lines created by insertions
+    and scrolls. }
+  _NEWINDEX                                                             = -1;
+
+  CCHARW_MAX                                                            = 5;
 type
   NCURSES_ATTR_T = type Integer;
 
@@ -71,8 +93,31 @@ type
   chtype = type Cardinal;
   mmask_t = type Cardinal;
 
+  { ...must be at least as wide as chtype }
+  attr_t = chtype;
+
   NCURSES_BOOL = type Boolean;
 
+  screen = type Pointer;
+  SCREEN = screen;
+
+  _win_st = type Pointer;
+  WINDOW = _win_st;
+
+  { cchar_t stores an array of CCHARW_MAX wide characters.  The first is
+    normally a spacing character.  The others are non-spacing.  If those
+    (spacing and nonspacing) do not fill the array, a null L'\0' follows.
+    Otherwise, a null is assumed to follow when extracting via getcchar(). }
+  cchar_t = record
+    attr : attr_t;
+    chars : WideString[CCHARW_MAX];
+  end;
+
+
+
+{var
+  acs_map : array of chtype; external name 'acs_name';
+}
 
 implementation
 
