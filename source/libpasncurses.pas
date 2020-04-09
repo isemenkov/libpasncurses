@@ -90,6 +90,7 @@ type
     char* values, this is not always workable for 64-bit platforms. }
   NCURSES_TPARM_ARG = type PInteger;
 
+  pchtype = ^chtype;
   chtype = type Cardinal;
   mmask_t = type Cardinal;
 
@@ -101,8 +102,19 @@ type
   screen = type Pointer;
   SCREEN = screen;
 
-  _win_st = type Pointer;
-  WINDOW = _win_st;
+  pldat = ^ldat;
+  ldat = type Pointer;
+
+  PWINDOW = ^WINDOW;
+
+  pdat = record
+    _pad_x : NCURSES_SIZE_T;
+    _pad_y : NCURSES_SIZE_T;
+    _pad_top : NCURSES_SIZE_T;
+    _pad_left : NCURSES_SIZE_T;
+    _pad_bottom : NCURSES_SIZE_T;
+    _pad_right :  NCURSES_SIZE_T;
+  end;
 
   { cchar_t stores an array of CCHARW_MAX wide characters.  The first is
     normally a spacing character.  The others are non-spacing.  If those
@@ -113,11 +125,78 @@ type
     chars : WideString[CCHARW_MAX];
   end;
 
+  _win_st = record
+    _cury, _curx : NCURSES_SIZE_T; { current cursor position }
 
+    { window location and size }
+    _maxy, _maxx : NCURSES_SIZE_T; { maximums of x and y, NOT window size }
+    _begy, _begx : NCURSES_SIZE_T; { screen coords of upper-left-hand corner }
 
-{var
-  acs_map : array of chtype; external name 'acs_name';
-}
+    _flags : ShortInt;             { window state flags }
+
+    { attribute tracking }
+    _attrs : attr_t;               { current attribute for non-space character }
+    _bkgd : chtype;                { current background char/attribute pair }
+
+    { option values set by user }
+    _notimeout : Boolean;          { no time out on function-key entry? }
+    _clear : Boolean;              { consider all data in the window invalid? }
+    _leaveok : Boolean;            { OK to not reset cursor on exit? }
+    _scroll : Boolean;             { OK to scroll this window? }
+    _idlok : Boolean;              { OK to use insert/delete line? }
+    _idcok : Boolean;              { OK to use insert/delete char? }
+    _immed : Boolean;              { window in immed mode? (not yet used) }
+    _sync : Boolean;               { window in sync mode? }
+    _use_keypad : Boolean;         { process function keys into KEY_ symbols? }
+    _delay : Integer;              { 0 = nodelay, <0 = blocking, >0 = delay }
+
+    _line : pldat;                 { the actual line data }
+
+    { global screen state }
+    _regtop : NCURSES_SIZE_T;      { top line of scrolling region }
+    _regbottom : NCURSES_SIZE_T;   { bottom line of scrolling region }
+
+    { these are used only if this is a sub-window }
+    _parx : Integer;               { x coordinate of this window in parent }
+    _pary : Integer;               { y coordinate of this window in parent }
+    _parent : PWINDOW;             { pointer to parent if a sub-window }
+
+    { these are used only if this is a pad }
+    _pad : pdat;
+
+    _yoffset : NCURSES_SIZE_T;     { real begy is _begy + _yoffset }
+
+    _bkgrnd : cchar_t;             { current background char/attribute pair }
+  end;
+
+  WINDOW = _win_st;
+
+  { Curses uses a helper function.  Define our type for this to simplify
+    extending it for the sp-funcs feature. }
+  NCURSES_OUTC = function (Value : Integer) : Integer of object;
+
+  {$IFDEF WINDOWS}
+    const libNCurses = 'libncurses.dll';
+  {$ENDIF}
+  {$IFDEF LINUX}
+    const libNCurses = 'libncurses.so';
+  {$ENDIF}
+
+  { Function prototypes.  This is the complete X/Open Curses list of required
+    functions.  Those marked `generated' will have sources generated from the
+    macro definitions later in this file, in order to satisfy XPG4.2
+    requirements. }
+
+  function addch (const Value : chtype) : Integer; cdecl; external libNCurses;
+  function addchnstr (const Value : pchtype; Value2 : Integer) : Integer; cdecl;
+    external libNCurses;
+  function addchstr (const Value : pchtype) : Integer; cdecl;
+    external libNCurses;
+  function addnstr (const Value : PChar; Value2 : Integer) : Integer; cdecl;
+    external libNCurses;
+  function addstr (const Value : PChar) : Integer; cdecl; external libNCurses;
+  function attroff (Value : NCURSES_ATTR_T) : Integer; cdecl;
+    external libNCurses;
 
 implementation
 
