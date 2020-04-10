@@ -187,15 +187,182 @@ type
     macro definitions later in this file, in order to satisfy XPG4.2
     requirements. }
 
-  function addch (const Value : chtype) : Integer; cdecl; external libNCurses;
-  function addchnstr (const Value : pchtype; Value2 : Integer) : Integer; cdecl;
+  { The addch, waddch, mvaddch and mvwaddch routines put the character ch into
+    the given window at its current window position, which is then advanced.
+    They are analogous to putchar in stdio. If the advance is at the right
+    margin, the cursor automatically wraps to the beginning of the next line. At
+    the bottom of the current scrolling region, if scrollok is enabled, the
+    scrolling region is scrolled up one line.
+
+    If ch is a tab, newline, or backspace, the cursor is moved appropriately
+    within the window. Backspace moves the cursor one character left; at the
+    left edge of a window it does nothing. Newline does a clrtoeol, then moves
+    the cursor to the window left margin on the next line, scrolling the window
+    if on the last line. Tabs are considered to be at every eighth column. The
+    tab interval may be altered by setting the TABSIZE variable.
+
+    If ch is any control character other than tab, newline, or backspace, it is
+    drawn in ^X notation. Calling winch after adding a control character does
+    not return the character itself, but instead returns the ^-representation of
+    the control character.
+
+    Video attributes can be combined with a character argument passed to addch
+    or related functions by logical-ORing them into the character. (Thus, text,
+    including attributes, can be copied from one place to another using inch and
+    addch.) See the curs_attr(3X) page for values of predefined video attribute
+    constants that can be usefully OR'ed into characters.
+
+    The echochar and wechochar routines are equivalent to a call to addch
+    followed by a call to refresh, or a call to waddch followed by a call to
+    wrefresh. The knowledge that only a single character is being output is used
+    and, for non-control characters, a considerable performance gain may be seen
+    by using these routines instead of their equivalents. }
+  function addch (const ch : chtype) : Integer; cdecl; external libNCurses;
+  function waddch (win : PWINDOW; const ch : chtype) : Integer; cdecl;
     external libNCurses;
-  function addchstr (const Value : pchtype) : Integer; cdecl;
+  function mvaddch (y : Integer; x : Integer; const ch : chtype) : Integer;
+    cdecl; external libNCurses;
+  function mvwaddch (win : PWINDOW; y : Integer; x : Integer; const ch: chtype):
+    Integer; cdecl; external libNCurses;
+  function echochar (const ch : chtype) : Integer; cdecl; external libNCurses;
+  function wechochar (win : PWINDOW; const ch : chtype) : Integer; cdecl;
     external libNCurses;
-  function addnstr (const Value : PChar; Value2 : Integer) : Integer; cdecl;
+
+  { These routines copy chstr into the window image structure at and after the
+    current cursor position. The four routines with n as the last argument copy
+    at most n elements, but no more than will fit on the line. If n=-1 then the
+    whole string is copied, to the maximum number of characters that will fit on
+    the line.
+
+    The window cursor is not advanced, and these routines work faster than
+    waddnstr. On the other hand, they do not perform any kind of checking (such
+    as for the newline, backspace, or carriage return characters), they do not
+    advance the current cursor position, they do not expand other control
+    characters to ^-escapes, and they truncate the string if it crosses the
+    right margin, rather than wrapping it around to the new line. }
+  function addchstr (const chstr : pchtype) : Integer; cdecl;
     external libNCurses;
-  function addstr (const Value : PChar) : Integer; cdecl; external libNCurses;
-  function attroff (Value : NCURSES_ATTR_T) : Integer; cdecl;
+  function addchnstr (const chstr : pchtype; n : Integer) : Integer; cdecl;
+    external libNCurses;
+  function waddchstr (win : PWINDOW; const chstr : pchtype) : Integer; cdecl;
+    external libNCurses;
+  function waddchnstr (win : PWINDOW; const chstr : pchtype; n : Integer) :
+    Integer; cdecl; external libNCurses;
+  function mvaddchstr (y : Integer; x : Integer; const chstr : pchtype) :
+    Integer; cdecl; external libNCurses;
+  function mvaddchnstr (y : Integer; x : Integer; const chstr : pchtype; n :
+    Integer) : Integer; cdecl; external libNCurses;
+  function mvwaddchstr (win : PWINDOW; y : Integer; x : Integer; const chstr :
+    pchtype) : Integer; cdecl; external libNCurses;
+  function mvwaddchnstr (win : PWINDOW; y : Integer; x : Integer; const chstr :
+    pchtype; n : Integer) : Integer; cdecl; external libNCurses;
+
+  { These routines write the characters of the (null-terminated) character
+    string str on the given window. It is similar to calling waddch once for
+    each character in the string. The four routines with n as the last argument
+    write at most n characters. If n is -1, then the entire string will be
+    added, up to the maximum number of characters that will fit on the line, or
+    until a terminating null is reached. }
+  function addstr (const str : PChar) : Integer; cdecl; external libNCurses;
+  function addnstr (const str : PChar; n : Integer) : Integer; cdecl;
+    external libNCurses;
+  function waddstr (win : PWINDOW; const str : PChar) : Integer; cdecl;
+    external libNCurses;
+  function waddnstr (win : PWINDOW; const str : PChar; n : Integer) : Integer;
+    cdecl; external libNCurses;
+  function mvaddstr (y : Integer; x : Integer; const str : PChar) : Integer;
+    cdecl; external libNCurses;
+  function mvaddnstr (y : Integer; x : Integer; const str : PChar; n : Integer):
+    Integer; cdecl; external libNCurses;
+  function mvwaddstr (win : PWINDOW; y : Integer; x : Integer; const str :
+    PChar) : Integer; cdecl; external libNCurses;
+  function mvwaddnstr (win : PWINDOW; y : Integer; x : Integer; const str :
+    PChar; n : Integer) : Integer; cdecl; external libNCurses;
+
+  { These routines manipulate the current attributes of the named window. The
+    current attributes of a window apply to all characters that are written into
+    the window with waddch, waddstr and wprintw. Attributes are a property of
+    the character, and move with the character through any scrolling and
+    insert/delete line/character operations. To the extent possible, they are
+    displayed as appropriate modifications to the graphic rendition of
+    characters put on the screen.
+
+    The routine attrset sets the current attributes of the given window to
+    attrs. The routine attroff turns off the named attributes without turning
+    any other attributes on or off. The routine attron turns on the named
+    attributes without affecting any others. The routine standout is the same as
+    attron(A_STANDOUT). The routine standend is the same as attrset(A_NORMAL) or
+    attrset, that is, it turns off all attributes.
+
+    The attrset and related routines do not affect the attributes used when
+    erasing portions of the window. See curs_bkgd for functions which modify
+    the attributes used for erasing and clearing.
+
+    The routine color_set sets the current color of the given window to the
+    foreground/background combination described by the color_pair_number. The
+    parameter opts is reserved for future use, applications must supply a null
+    pointer.
+
+    The routine wattr_get returns the current attribute and color pair for the
+    given window; attr_get returns the current attribute and color pair for
+    stdscr. The remaining attr_* functions operate exactly like the
+    corresponding attr* functions, except that they take arguments of type
+    attr_t rather than int.
+
+    The routine chgat changes the attributes of a given number of characters
+    starting at the current cursor location of stdscr. It does not update the
+    cursor and does not perform wrapping. A character count of -1 or greater
+    than the remaining window width means to change attributes all the way to
+    the end of the current line. The wchgat function generalizes this to any
+    window; the mvwchgat function does a cursor move before acting. In these
+    functions, the color argument is a color-pair index (as in the first
+    argument of init_pair, see curs_color(3X)). The opts argument is not
+    presently used, but is reserved for the future (leave it NULL). }
+  function attroff (attrs : NCURSES_ATTR_T) : Integer; cdecl;
+    external libNCurses;
+  function wattroff (win : PWINDOW; attrs : NCURSES_ATTR_T) : Integer; cdecl;
+    external libNCurses;
+  function attron (attrs : NCURSES_ATTR_T) : Integer; cdecl;
+    external libNCurses;
+  function wattron (win : PWINDOW; attrs : NCURSES_ATTR_T) : Integer; cdecl;
+    external libNCurses;
+  function attrset (attrs : NCURSES_ATTR_T) : Integer; cdecl;
+    external libNCurses;
+  function wattrset (win : PWINDOW; attrs : NCURSES_ATTR_T) : Integer; cdecl;
+    external libNCurses;
+  function color_set (color_pair_number : Shortint; opts : Pointer) : Integer;
+    cdecl; external libNCurses;
+  function wcolor_set (win : PWINDOW; color_pair_number : Shortint; opts :
+    Pointer) : Integer; cdecl; external libNCurses;
+  function standend : Integer; cdecl; external libNCurses;
+  function wstandend (win : PWINDOW) : Integer; cdecl; external libNCurses;
+  function standout : Integer; cdecl; external libNCurses;
+  function wstandout (win : PWINDOW) : Integer; cdecl; external libNCurses;
+  function attr_get (attrs : pattr_t; pair : PShortint; opts : Pointer) :
+    Integer; cdecl; external libNCurses;
+  function wattr_get (win : PWINDOW; attrs : pattr_t; pair : PShortint; opts :
+    Pointer) : Intger; cdecl; external libNCurses;
+  function attr_off (attrs : attr_t; opts : Pointer) : Integer; cdecl;
+    external libNCurses;
+  function wattr_off (win : PWINDOW; attrs : attr_t; opts : Pointer) : Integer;
+    cdecl; external libNCurses;
+  function attr_on (attrs : attr_t; opts : Pointer) : Integer; cdecl;
+    external libNCurses;
+  function wattr_on (win : PWINDOW; attrs : attr_t; opts : Pointer) : Integer;
+    cdecl; external libNCurses;
+  function attr_set (attrs : attr_t; pair : Shortint; opts : Pointer) : Integer;
+    cdecl; external libNCurses;
+  function wattr_set (win : PWINDOW; attrs : attr_t; pair : Shortint; opts :
+    Pointer) : Integer; cdecl; external libNCurses;
+  function chgat (n : Integer; attr : attr_t; color : Shortint; const opts :
+    Pointer) : Integer; cdecl; external libNCurses;
+  function wchgat (win : PWINDOW; n : Integer; attr : attr_t; color : Shortint;
+    const opts : Pointer) : Integer; cdecl; external libNCurses;
+  function mvchgat (y : Integer; x : Integer; n : Integer; attr : attr_t;
+    color : Shortint; const opts : Pointer) : Integer; cdecl;
+    external libNCurses;
+  function mvwchgat (win : PWINDOW; y : Integer; x : Integer; n : Integer;
+    attr : attr_t; color : Shortint; const opts : Pointer) : Integer; cdecl;
     external libNCurses;
 
 implementation
