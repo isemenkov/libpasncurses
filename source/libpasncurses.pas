@@ -365,6 +365,268 @@ type
     attr : attr_t; color : Shortint; const opts : Pointer) : Integer; cdecl;
     external libNCurses;
 
+  { The baudrate routine returns the output speed of the terminal. The number
+    returned is in bits per second, for example 9600, and is an integer.
+
+    The erasechar routine returns the user's current erase character.
+
+    The erasewchar routine stores the current erase character in the location
+    referenced by ch. If no erase character has been defined, the routine fails
+    and the location referenced by ch is not changed.
+
+    The has_ic routine is true if the terminal has insert- and delete- character
+    capabilities.
+
+    The has_il routine is true if the terminal has insert- and delete-line
+    capabilities, or can simulate them using scrolling regions. This might be
+    used to determine if it would be appropriate to turn on physical scrolling
+    using scrollok.
+
+    The killchar routine returns the user's current line kill character.
+
+    The killwchar routine stores the current line-kill character in the location
+    referenced by ch. If no line-kill character has been defined, the routine
+    fails and the location referenced by ch is not changed.
+
+    The longname routine returns a pointer to a static area containing a verbose
+    description of the current terminal. The maximum length of a verbose
+    description is 128 characters. It is defined only after the call to initscr
+    or newterm. The area is overwritten by each call to newterm and is not
+    restored by set_term, so the value should be saved between calls to newterm
+    if longname is going to be used with multiple terminals.
+
+    If a given terminal does not support a video attribute that an application
+    program is trying to use, curses may substitute a different video attribute
+    for it. The termattrs and term_attrs functions return a logical OR of all
+    video attributes supported by the terminal using A_ and WA_ constants
+    respectively. This information is useful when a curses program needs
+    complete control over the appearance of the screen.
+
+    The termname routine returns the terminal name used by setupterm. }
+  function baudrate : Integer; cdecl; external libNCurses;
+  function erasechar : Char; cdecl; external libNCurses;
+  function erasewchar (ch : PWideChar) : Integer; cdecl; external libNCurses;
+  function has_ic : Boolean; cdecl; external libNCurses;
+  function has_il : Boolean; cdecl; external libNCurses;
+  function killchar : Char; cdecl; external libNCurses;
+  function killwchar (ch : PWideChar) : Integer; cdecl; external libNCurses;
+  function longname : PChar; cdecl; external libNCurses;
+  function term_attrs : attr_t; cdecl; external libNCurses;
+  function termattrs : chtype; cdecl; external libNCurses;
+  function termname : PChar; cdecl; external libNCurses;
+
+  { The beep and flash routines are used to alert the terminal user. The routine
+    beep sounds an audible alarm on the terminal, if possible; otherwise it
+    flashes the screen (visible bell). The routine flash flashes the screen, and
+    if that is not possible, sounds the alert. If neither alert is possible,
+    nothing happens. Nearly all terminals have an audible alert (bell or beep),
+    but only some can flash the screen. }
+  function beep : Integer; cdecl; external libNCurses;
+  function flash : Integer; cdecl; external libNCurses;
+
+  { The bkgdset and wbkgdset routines manipulate the background of the named
+    window. The window background is a chtype consisting of any combination of
+    attributes (i.e., rendition) and a character. The attribute part of the
+    background is combined (OR'ed) with all non-blank characters that are
+    written into the window with waddch. Both the character and attribute parts
+    of the background are combined with the blank characters. The background
+    becomes a property of the character and moves with the character through any
+    scrolling and insert/delete line/character operations.
+
+    To the extent possible on a particular terminal, the attribute part of the
+    background is displayed as the graphic rendition of the character put on the
+    screen.
+
+    The bkgd and wbkgd functions set the background property of the current or
+    specified window and then apply this setting to every character position in
+    that window:
+
+         The rendition of every character on the screen is changed to the new
+         background rendition.
+
+         Wherever the former background character appears, it is changed to the
+         new background character.
+
+    The getbkgd function returns the given window's current background
+    character/attribute pair. }
+  procedure bkgdset (ch : chtype); cdecl; external libNCurses;
+  procedure wbkgdset (win : PWINDOW; ch : chtype); cdecl; external libNCurses;
+  function bkgd (ch : chtype) : Integer; cdecl; external libNCurses;
+  function wbkgd (win : PWINDOW; ch : chtype) : Integer; cdecl;
+    external libNCurses;
+  function getbkgd (win : PWINDOW) : chtype; cdecl; external libNCurses;
+
+  { The border, wborder and box routines draw a box around the edges of a
+    window. Other than the window, each argument is a character with attributes:
+
+         ls - left side,
+         rs - right side,
+         ts - top side,
+         bs - bottom side,
+         tl - top left-hand corner,
+         tr - top right-hand corner,
+         bl - bottom left-hand corner, and
+         br - bottom right-hand corner.
+
+    If any of these arguments is zero, then the corresponding default values
+    (defined in curses.h) are used instead:
+
+         ACS_VLINE,
+         ACS_VLINE,
+         ACS_HLINE,
+         ACS_HLINE,
+         ACS_ULCORNER,
+         ACS_URCORNER,
+         ACS_LLCORNER,
+         ACS_LRCORNER.
+
+    box(win, verch, horch) is a shorthand for the following call: wborder(win,
+    verch, verch, horch, horch, 0, 0, 0, 0).
+
+    The hline and whline functions draw a horizontal (left to right) line using
+    ch starting at the current cursor position in the window. The current cursor
+    position is not changed. The line is at most n characters long, or as many
+    as fit into the window.
+
+    The vline and wvline functions draw a vertical (top to bottom) line using ch
+    starting at the current cursor position in the window. The current cursor
+    position is not changed. The line is at most n characters long, or as many
+    as fit into the window. }
+  function border (ls : chtype; rs : chtype; ts : chtype; bs : chtype;
+    tl : chtype; tr : chtype; bl : chtype; br : chtype) : Integer; cdecl;
+    external libNCurses;
+  function wborder (win : PWINDOW; ls : chtype; rs : chtype; ts : chtype;
+    bs : chtype; tl : chtype; tr : chtype; bl : chtype; rb : chtype) : Integer;
+    cdecl; external libNCurses;
+  function box (win : PWINDOW; verch : chtype; horch : chtype) : Integer;
+    cdecl; external libNCurses;
+  function hline (ch : chtype; n : Integer) : Integer; cdecl;
+    external libNCurses;
+  function whline (win : PWINDOW; ch : chtype; n : Integer) : Integer; cdecl;
+    external libNCurses;
+  function vline (ch : chtype; n : Integer) : Integer; cdecl;
+    external libNCurses;
+  function wvline (win : PWINDOW; ch : chtype; n : Integer) : Integer; cdecl;
+    external libNCurses;
+  function mvhline (y : Integer; x : Integer; ch : chtype; n : Integer) :
+    Integer; cdecl; external libNCurses;
+  function mvwhline (win : PWINDOW; y : Integer; x : Integer; ch : chtype;
+    n : Integer) : Integer; cdecl; external libNCurses;
+  function mvvline (y : Integer; x : Integer; ch : chtype; n : Integer) :
+    Integer; cdecl; external libNCurses;
+  function mvwvline (win : PWINDOW; y : Integer; x : Integer; ch : chtype;
+    n : Integer) : Integer; cdecl; external libNCurses;
+
+  { curses support color attributes on terminals with that capability. To use
+    these routines start_color must be called, usually right after initscr.
+    Colors are always used in pairs (referred to as color-pairs). A color-pair
+    consists of a foreground color (for characters) and a background color (for
+    the blank field on which the characters are displayed). A programmer
+    initializes a color-pair with the routine init_pair. After it has been
+    initialized, COLOR_PAIR(n), a macro defined in <curses.h>, can be used as a
+    new video attribute.
+
+    If a terminal is capable of redefining colors, the programmer can use the
+    routine init_color to change the definition of a color. The routines
+    has_colors and can_change_color return TRUE or FALSE, depending on whether
+    the terminal has color capabilities and whether the programmer can change
+    the colors. The routine color_content allows a programmer to extract the
+    amounts of red, green, and blue components in an initialized color. The
+    routine pair_content allows a programmer to find out how a given color-pair
+    is currently defined.
+
+    Routine Descriptions
+
+    The start_color routine requires no arguments. It must be called if the
+    programmer wants to use colors, and before any other color manipulation
+    routine is called. It is good practice to call this routine right after
+    initscr. start_color initializes eight basic colors (black, red, green,
+    yellow, blue, magenta, cyan, and white), and two global variables, COLORS
+    and COLOR_PAIRS (respectively defining the maximum number of colors and
+    color-pairs the terminal can support). It also restores the colors on the
+    terminal to the values they had when the terminal was just turned on.
+
+    The init_pair routine changes the definition of a color-pair. It takes three
+    arguments: the number of the color-pair to be changed, the foreground color
+    number, and the background color number. For portable applications:
+
+         - The value of the first argument must be between 1 and COLOR_PAIRS-1,
+         except that if default colors are used (see use_default_colors) the
+         upper limit is adjusted to allow for extra pairs which use a default
+         color in foreground and/or background.
+
+         - The value of the second and third arguments must be between 0 and
+         COLORS. Color pair 0 is assumed to be white on black, but is actually
+         whatever the terminal implements before color is initialized. It cannot
+         be modified by the application.
+
+    If the color-pair was previously initialized, the screen is refreshed and
+    all occurrences of that color-pair are changed to the new definition.
+
+    As an extension, ncurses allows you to set color pair 0 via the
+    assume_default_colors routine, or to specify the use of default colors
+    (color number -1) if you first invoke the use_default_colors routine.
+
+    The init_color routine changes the definition of a color. It takes four
+    arguments: the number of the color to be changed followed by three RGB
+    values (for the amounts of red, green, and blue components). The value of
+    the first argument must be between 0 and COLORS. (See the section Colors for
+    the default color index.) Each of the last three arguments must be a value
+    between 0 and 1000. When init_color is used, all occurrences of that color
+    on the screen immediately change to the new definition.
+
+    The has_colors routine requires no arguments. It returns TRUE if the
+    terminal can manipulate colors; otherwise, it returns FALSE. This routine
+    facilitates writing terminal-independent programs. For example, a programmer
+    can use it to decide whether to use color or some other video attribute.
+
+    The can_change_color routine requires no arguments. It returns TRUE if the
+    terminal supports colors and can change their definitions; other, it returns
+    FALSE. This routine facilitates writing terminal-independent programs.
+
+    The color_content routine gives programmers a way to find the intensity of
+    the red, green, and blue (RGB) components in a color. It requires four
+    arguments: the color number, and three addresses of shorts for storing the
+    information about the amounts of red, green, and blue components in the
+    given color. The value of the first argument must be between 0 and COLORS.
+    The values that are stored at the addresses pointed to by the last three
+    arguments are between 0 (no component) and 1000 (maximum amount of
+    component).
+
+    The pair_content routine allows programmers to find out what colors a given
+    color-pair consists of. It requires three arguments: the color-pair number,
+    and two addresses of shorts for storing the foreground and the background
+    color numbers. The value of the first argument must be between 1 and
+    COLOR_PAIRS-1. The values that are stored at the addresses pointed to by the
+    second and third arguments are between 0 and COLORS.
+
+    Colors
+
+    In <curses.h> the following macros are defined. These are the default
+    colors. curses also assumes that COLOR_BLACK is the default background color
+    for all terminals.
+
+         COLOR_BLACK
+         COLOR_RED
+         COLOR_GREEN
+         COLOR_YELLOW
+         COLOR_BLUE
+         COLOR_MAGENTA
+         COLOR_CYAN
+         COLOR_WHITE }
+  function start_color : Integer; cdecl; external libNCurses;
+  function init_pair (pair : Shortint; f : Shortint; b : Shortint) : Integer;
+    cdecl; external libNCurses;
+  function init_color (color : Shortint; r : Shortint; g : Shortint;
+    b : Shortint) : Integer; cdecl; external libNCurses;
+  function has_colors : Boolean; cdecl; external libNCurses;
+  function can_change_color : Boolean; cdecl; external libNCurses;
+  function color_content (color : Shortint; r : PShortint; g : PShortint;
+    b : PShortint) : Integer; cdecl; external libNCurses;
+  function pair_content (pair : Shortint; f : PShortint; b : PShortint) :
+    Integer; cdecl; external libNCurses;
+
+
 implementation
 
 end.
