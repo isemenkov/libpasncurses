@@ -100,6 +100,7 @@ type
   NCURSES_BOOL = type Boolean;
 
   screen = type Pointer;
+  PSCREEN = ^SCREEN;
   SCREEN = screen;
 
   pldat = ^ldat;
@@ -174,6 +175,9 @@ type
   { Curses uses a helper function.  Define our type for this to simplify
     extending it for the sp-funcs feature. }
   NCURSES_OUTC = function (Value : Integer) : Integer of object;
+
+  ripoffline_init_callback = function (win : PWINDOW; val : Integer) : Integer
+    of object;
 
   {$IFDEF WINDOWS}
     const libNCurses = 'libncurses.dll';
@@ -625,6 +629,516 @@ type
     b : PShortint) : Integer; cdecl; external libNCurses;
   function pair_content (pair : Shortint; f : PShortint; b : PShortint) :
     Integer; cdecl; external libNCurses;
+
+  { Normally, the tty driver buffers typed characters until a newline or
+    carriage return is typed. The cbreak routine disables line buffering and
+    erase/kill character-processing (interrupt and flow control characters are
+    unaffected), making characters typed by the user immediately available to
+    the program. The nocbreak routine returns the terminal to normal (cooked)
+    mode.
+
+    Initially the terminal may or may not be in cbreak mode, as the mode is
+    inherited; therefore, a program should call cbreak or nocbreak explicitly.
+    Most interactive programs using curses set the cbreak mode. Note that cbreak
+    overrides raw. [See curs_getch for a discussion of how these routines
+    interact with echo and noecho.]
+
+    The echo and noecho routines control whether characters typed by the user
+    are echoed by getch as they are typed. Echoing by the tty driver is always
+    disabled, but initially getch is in echo mode, so characters typed are
+    echoed. Authors of most interactive programs prefer to do their own echoing
+    in a controlled area of the screen, or not to echo at all, so they disable
+    echoing by calling noecho. [See curs_getch for a discussion of how these
+    routines interact with cbreak and nocbreak.]
+
+    The halfdelay routine is used for half-delay mode, which is similar to
+    cbreak mode in that characters typed by the user are immediately available
+    to the program. However, after blocking for tenths tenths of seconds, ERR is
+    returned if nothing has been typed. The value of tenths must be a number
+    between 1 and 255. Use nocbreak to leave half-delay mode.
+
+    If the intrflush option is enabled, (bf is TRUE), when an interrupt key is
+    pressed on the keyboard (interrupt, break, quit) all output in the tty
+    driver queue will be flushed, giving the effect of faster response to the
+    interrupt, but causing curses to have the wrong idea of what is on the
+    screen. Disabling (bf is FALSE), the option prevents the flush. The default
+    for the option is inherited from the tty driver settings. The window
+    argument is ignored.
+
+    The keypad option enables the keypad of the user's terminal. If enabled (bf
+    is TRUE), the user can press a function key (such as an arrow key) and
+    wgetch returns a single value representing the function key, as in KEY_LEFT.
+    If disabled (bf is FALSE), curses does not treat function keys specially and
+    the program has to interpret the escape sequences itself. If the keypad in
+    the terminal can be turned on (made to transmit) and off (made to work
+    locally), turning on this option causes the terminal keypad to be turned on
+    when wgetch is called. The default value for keypad is false.
+
+    Initially, whether the terminal returns 7 or 8 significant bits on input
+    depends on the control mode of the tty driver [see termio]. To force 8 bits
+    to be returned, invoke meta(win, TRUE); this is equivalent, under POSIX, to
+    setting the CS8 flag on the terminal. To force 7 bits to be returned, invoke
+    meta(win, FALSE); this is equivalent, under POSIX, to setting the CS7 flag
+    on the terminal. The window argument, win, is always ignored. If the
+    terminfo capabilities smm (meta_on) and rmm (meta_off) are defined for the
+    terminal, smm is sent to the terminal when meta(win, TRUE) is called and rmm
+    is sent when meta(win, FALSE) is called.
+
+    The nodelay option causes getch to be a non-blocking call. If no input is
+    ready, getch returns ERR. If disabled (bf is FALSE), getch waits until a key
+    is pressed.
+
+    While interpreting an input escape sequence, wgetch sets a timer while
+    waiting for the next character. If notimeout(win, TRUE) is called, then
+    wgetch does not set a timer. The purpose of the timeout is to differentiate
+    between sequences received from a function key and those typed by a user.
+
+    The raw and noraw routines place the terminal into or out of raw mode. Raw
+    mode is similar to cbreak mode, in that characters typed are immediately
+    passed through to the user program. The differences are that in raw mode,
+    the interrupt, quit, suspend, and flow control characters are all passed
+    through uninterpreted, instead of generating a signal. The behavior of the
+    BREAK key depends on other bits in the tty driver that are not set by
+    curses.
+
+    When the noqiflush routine is used, normal flush of input and output queues
+    associated with the INTR, QUIT and SUSP characters will not be done [see
+    termio]. When qiflush is called, the queues will be flushed when these
+    control characters are read. You may want to call noqiflush() in a signal
+    handler if you want output to continue as though the interrupt had not
+    occurred, after the handler exits.
+
+    The timeout and wtimeout routines set blocking or non-blocking read for a
+    given window. If delay is negative, blocking read is used (i.e., waits
+    indefinitely for input). If delay is zero, then non-blocking read is used
+    (i.e., read returns ERR if no input is waiting). If delay is positive, then
+    read blocks for delay milliseconds, and returns ERR if there is still no
+    input. Hence, these routines provide the same functionality as nodelay, plus
+    the additional capability of being able to block for only delay milliseconds
+    (where delay is positive).
+
+    The curses library does ''line-breakout optimization'' by looking for
+    typeahead periodically while updating the screen. If input is found, and it
+    is coming from a tty, the current update is postponed until refresh or
+    doupdate is called again. This allows faster response to commands typed in
+    advance. Normally, the input FILE pointer passed to newterm, or stdin in the
+    case that initscr was used, will be used to do this typeahead checking. The
+    typeahead routine specifies that the file descriptor fd is to be used to
+    check for typeahead instead. If fd is -1, then no typeahead checking is
+    done. }
+  function cbreak : Integer; cdecl; external libNCurses;
+  function nocbreak : Integer; cdecl; external libNCurses;
+  function echo : Integer; cdecl; external libNCurses;
+  function noecho : Integer; cdecl; external libNCurses;
+  function halfdelay (tenths : Integer) : Integer; cdecl; external libNCurses;
+  function intrflush (win : PWINDOW; bf : Boolean) : Integer; cdecl;
+    external libNCurses;
+  function keypad (win : PWINDOW; bf : Boolean) : Integer; cdecl;
+    external libNCurses;
+  function meta (win : PWINDOW; bf : Boolean) : Integer; cdecl;
+    external libNCurses;
+  function nodelay (win : PWINDOW; bf : Boolean) : Integer; cdecl;
+    external libNCurses;
+  function raw : Integer; cdecl; external libNCurses;
+  function noraw : Integer; cdecl; external libNCurses;
+  procedure noqiflush; cdecl; external libNCurses;
+  procedure qiflush; cdecl; external libNCurses;
+  function notimeout (win : PWINDOW; bf : Boolean) : Integer; cdecl;
+    external libNCurses;
+  procedure timeout (delay : Integer); cdecl; external libNCurses;
+  procedure wtimeout (win : PWINDOW; delay : Integer); cdecl;
+    external libNCurses;
+  function typeahead (fd : Integer) : Integer; cdecl; external libNCurses;
+
+  { The erase and werase routines copy blanks to every position in the window,
+    clearing the screen.
+
+    The clear and wclear routines are like erase and werase, but they also call
+    clearok, so that the screen is cleared completely on the next call to
+    wrefresh for that window and repainted from scratch.
+
+    The clrtobot and wclrtobot routines erase from the cursor to the end of
+    screen. That is, they erase all lines below the cursor in the window. Also,
+    the current line to the right of the cursor, inclusive, is erased.
+
+    The clrtoeol and wclrtoeol routines erase the current line to the right of
+    the cursor, inclusive, to the end of the current line.
+
+    Blanks created by erasure have the current background rendition (as set by
+    wbkgdset) merged into them. }
+  function erase : Integer; cdecl; external libNCurses;
+  function werase (win : PWINDOW) : Integer; cdecl; external libNCurses;
+  function clear : Integer; cdecl; external libNCurses;
+  function wclear (win : PWINDOW) : Integer; cdecl; external libNCurses;
+  function clrtobot : Integer; cdecl; external libNCurses;
+  function wclrtobot (win : PWINDOW) : Integer; cdecl; external libNCurses;
+  function clrtoeol : Integer; cdecl; external libNCurses;
+  function wclrtoeol (win : PWINDOW) : Integer; cdecl; external libNCurses;
+
+  { These routines set options that change the style of output within curses.
+    All options are initially FALSE, unless otherwise stated. It is not
+    necessary to turn these options off before calling endwin.
+
+    If clearok is called with TRUE as argument, the next call to wrefresh with
+    this window will clear the screen completely and redraw the entire screen
+    from scratch. This is useful when the contents of the screen are uncertain,
+    or in some cases for a more pleasing visual effect. If the win argument to
+    clearok is the global variable curscr, the next call to wrefresh with any
+    window causes the screen to be cleared and repainted from scratch.
+
+    If idlok is called with TRUE as second argument, curses considers using the
+    hardware insert/delete line feature of terminals so equipped. Calling idlok
+    with FALSE as second argument disables use of line insertion and deletion.
+    This option should be enabled only if the application needs insert/delete
+    line, for example, for a screen editor. It is disabled by default because
+    insert/delete line tends to be visually annoying when used in applications
+    where it is not really needed. If insert/delete line cannot be used, curses
+    redraws the changed portions of all lines.
+
+    If idcok is called with FALSE as second argument, curses no longer considers
+    using the hardware insert/delete character feature of terminals so equipped.
+    Use of character insert/delete is enabled by default. Calling idcok with
+    TRUE as second argument re-enables use of character insertion and deletion.
+
+    If immedok is called with TRUE as argument, any change in the window image,
+    such as the ones caused by waddch, wclrtobot, wscrl, etc., automatically
+    cause a call to wrefresh. However, it may degrade performance considerably,
+    due to repeated calls to wrefresh. It is disabled by default.
+
+    Normally, the hardware cursor is left at the location of the window cursor
+    being refreshed. The leaveok option allows the cursor to be left wherever
+    the update happens to leave it. It is useful for applications where the
+    cursor is not used, since it reduces the need for cursor motions.
+
+    The setscrreg and wsetscrreg routines allow the application programmer to
+    set a software scrolling region in a window. top and bot are the line
+    numbers of the top and bottom margin of the scrolling region. (Line 0 is the
+    top line of the window.) If this option and scrollok are enabled, an attempt
+    to move off the bottom margin line causes all lines in the scrolling region
+    to scroll one line in the direction of the first line. Only the text of the
+    window is scrolled. (Note that this has nothing to do with the use of a
+    physical scrolling region capability in the terminal, like that in the
+    VT100. If idlok is enabled and the terminal has either a scrolling region or
+    insert/delete line capability, they will probably be used by the output
+    routines.)
+
+    The scrollok option controls what happens when the cursor of a window is
+    moved off the edge of the window or scrolling region, either as a result of
+    a newline action on the bottom line, or typing the last character of the
+    last line. If disabled, (bf is FALSE), the cursor is left on the bottom
+    line. If enabled, (bf is TRUE), the window is scrolled up one line (Note
+    that to get the physical scrolling effect on the terminal, it is also
+    necessary to call idlok).
+
+    The nl and nonl routines control whether the underlying display device
+    translates the return key into newline on input, and whether it translates
+    newline into return and line-feed on output (in either case, the call
+    addch('\n') does the equivalent of return and line feed on the virtual
+    screen). Initially, these translations do occur. If you disable them using
+    nonl, curses will be able to make better use of the line-feed capability,
+    resulting in faster cursor motion. Also, curses will then be able to detect
+    the return key. }
+  function clearok (win : PWINDOW; bf : Boolean) : Integer; cdecl;
+    external libNCurses;
+  function idlok (win : PWINDOW; bf : Boolean) : Integer; cdecl;
+    external libNCurses;
+  procedure idcok (win : PWINDOW; bf : Boolean); cdecl; external libNCurses;
+  procedure immedok (win : PWINDOW; bf : Boolean); cdecl; external libNCurses;
+  function leaveok (win : PWINDOW; bf : Boolean) : Integer; cdecl;
+    external libNCurses;
+  function setscrreg (top : Integer; bot : Integer) : Integer; cdecl;
+    external libNCurses;
+  function wsetscrreg (win : PWINDOW; top : Integer; bot : Integer) : Integer;
+    cdecl; external libNCurses;
+  function scrollok (win : PWINDOW; bf : Boolean) : Integer; cdecl;
+    external libNCurses;
+  function nl : Integer; cdecl; external libNCurses;
+  function nonl : Integer; cdecl; external libNCurses;
+
+  { The overlay and overwrite routines overlay srcwin on top of dstwin. scrwin
+    and dstwin are not required to be the same size; only text where the two
+    windows overlap is copied. The difference is that overlay is non-destructive
+    (blanks are not copied) whereas overwrite is destructive.
+
+    The copywin routine provides a finer granularity of control over the overlay
+    and overwrite routines. Like in the prefresh routine, a rectangle is
+    specified in the destination window, (dminrow, dmincol) and (dmaxrow,
+    dmaxcol), and the upper-left-corner coordinates of the source window,
+    (sminrow, smincol). If the argument overlay is true, then copying is
+    non-destructive, as in overlay. }
+  function overlay (const srcwin : PWINDOW; dstwin : PWINDOW) : Integer; cdecl;
+    external libNCurses;
+  function overwrite (const srcwin : PWINDOW; dstwin : PWINDOW) : Integer;
+    cdecl; external libNCurses;
+  function copywin (const srcwin : PWINDOW; dstwin : PWINDOW; sminrow : Integer;
+    dminrow : Integer; dmincol : Integer; dmaxrow : Integer; dmaxcol : Integer;
+    overlay : Integer) : Integer; cdecl; external libNCurses;
+
+  { The following routines give low-level access to various curses capabilities.
+    Theses routines typically are used inside library routines.
+
+    The def_prog_mode and def_shell_mode routines save the current terminal
+    modes as the "program" (in curses) or "shell" (not in curses) state for use
+    by the reset_prog_mode and reset_shell_mode routines. This is done
+    automatically by initscr. There is one such save area for each screen
+    context allocated by newterm().
+
+    The reset_prog_mode and reset_shell_mode routines restore the terminal to
+    "program" (in curses) or "shell" (out of curses) state. These are done
+    automatically by endwin and, after an endwin, by doupdate, so they normally
+    are not called.
+
+    The resetty and savetty routines save and restore the state of the terminal
+    modes. savetty saves the current state in a buffer and resetty restores the
+    state to what it was at the last call to savetty.
+
+    The getsyx routine returns the current coordinates of the virtual screen
+    cursor in y and x. If leaveok is currently TRUE, then -1,-1 is returned. If
+    lines have been removed from the top of the screen, using ripoffline, y and
+    x include these lines; therefore, y and x should be used only as arguments
+    for setsyx.
+
+    The setsyx routine sets the virtual screen cursor to y, x. If y and x are
+    both -1, then leaveok is set. The two routines getsyx and setsyx are
+    designed to be used by a library routine, which manipulates curses windows
+    but does not want to change the current position of the program's cursor.
+    The library routine would call getsyx at the beginning, do its manipulation
+    of its own windows, do a wnoutrefresh on its windows, call setsyx, and then
+    call doupdate.
+
+    The ripoffline routine provides access to the same facility that slk_init
+    [see curs_slk] uses to reduce the size of the screen. ripoffline must be
+    called before initscr or newterm is called. If line is positive, a line is
+    removed from the top of stdscr; if line is negative, a line is removed from
+    the bottom. When this is done inside initscr, the routine init (supplied by
+    the user) is called with two arguments: a window pointer to the one-line
+    window that has been allocated and an integer with the number of columns in
+    the window. Inside this initialization routine, the integer variables LINES
+    and COLS (defined in <curses.h>) are not guaranteed to be accurate and
+    wrefresh or doupdate must not be called. It is allowable to call
+    wnoutrefresh during the initialization routine.
+
+    ripoffline can be called up to five times before calling initscr or newterm.
+
+    The curs_set routine sets the cursor state is set to invisible, normal, or
+    very visible for visibility equal to 0, 1, or 2 respectively. If the
+    terminal supports the visibility requested, the previous cursor state is
+    returned; otherwise, ERR is returned.
+
+    The napms routine is used to sleep for ms milliseconds. }
+  function def_prog_mode : Integer; cdecl; external libNCurses;
+  function def_shell_mode : Integer; cdecl; external libNCurses;
+  function reset_prog_mode : Integer; cdecl; external libNCurses;
+  function reset_shell_mode : Integer; cdecl; external libNCurses;
+  function resetty : Integer; cdecl; external libNCurses;
+  function savetty : Integer; cdecl; external libNCurses;
+  procedure getsyx (y : Integer; x : Integer); cdecl; external libNCurses;
+  procedure setsyx (y : Integer; x : Integer); cdecl; external libNCurses;
+  function ripoffline (line : Integer; init : ripoffline_init_callback) :
+    Integer; cdecl; external libNCurses;
+  function curs_set (visibility : Integer) : Integer; cdecl;
+    external libNCurses;
+  function napms (ms : Integer) : Integer; cdecl; external libNCurses;
+
+  { The unctrl routine returns a character string which is a printable
+    representation of the character c, ignoring attributes. Control characters
+    are displayed in the ^X notation. Printing characters are displayed as is.
+    The corresponding wunctrl returns a printable representation of a
+    wide-character.
+
+    The keyname routine returns a character string corresponding to the key c:
+
+        - Printable characters are displayed as themselves, e.g., a
+        one-character string containing the key.
+        - Control characters are displayed in the ^X notation.
+        - DEL (character 127) is displayed as ^?.
+        - Values above 128 are either meta characters (if the screen has not
+        been initialized, or if meta has been called with a TRUE parameter),
+        shown in the M-X notation, or are displayed as themselves. In the latter
+        case, the values may not be printable; this follows the X/Open
+        specification.
+        - Values above 256 may be the names of the names of function keys.
+        - Otherwise (if there is no corresponding name) the function returns
+        null, to denote an error. X/Open also lists an "UNKNOWN KEY" return
+        value, which some implementations return rather than null.
+
+    The corresponding key_name returns a character string corresponding to the
+    wide-character value w. The two functions do not return the same set of
+    strings; the latter returns null where the former would display a meta
+    character.
+
+    The filter routine, if used, must be called before initscr or newterm are
+    called. The effect is that, during those calls, LINES is set to 1; the
+    capabilities clear, cup, cud, cud1, cuu1, cuu, vpa are disabled; and the
+    home string is set to the value of cr.
+
+    The nofilter routine cancels the effect of a preceding filter call. That
+    allows the caller to initialize a screen on a different device, using a
+    different value of $TERM. The limitation arises because the filter routine
+    modifies the in-memory copy of the terminal information.
+
+    The use_env routine, if used, is called before initscr or newterm are
+    called. When called with FALSE as an argument, the values of lines and
+    columns specified in the terminfo database will be used, even if environment
+    variables LINES and COLUMNS (used by default) are set, or if curses is
+    running in a window (in which case default behavior would be to use the
+    window size if LINES and COLUMNS are not set). Note that setting LINES or
+    COLUMNS overrides the corresponding size which may be obtained from the
+    operating system.
+
+    The putwin routine writes all data associated with window win into the file
+    to which filep points. This information can be later retrieved using the
+    getwin function.
+
+    The getwin routine reads window related data stored in the file by putwin.
+    The routine then creates and initializes a new window using that data. It
+    returns a pointer to the new window.
+
+    The delay_output routine inserts an ms millisecond pause in output. This
+    routine should not be used extensively because padding characters are used
+    rather than a CPU pause. If no padding character is specified, this uses
+    napms to perform the delay.
+
+    The flushinp routine throws away any typeahead that has been typed by the
+    user and has not yet been read by the program. }
+  function unctrl (c : chtype) : PChar; cdecl; external libNCurses;
+  //function wunctrl (c : pcchar_t) : PWideChar; cdecl; external libNCurses;
+  function keyname (c : Integer) : PChar; cdecl; external libNCurses;
+  function key_name (w : WideChar) : PChar; cdecl; external libNCurses;
+  procedure filter; cdecl; external libNCurses;
+  procedure nofilter; cdecl; external libNCurses;
+  procedure use_env (f : Boolean); cdecl; external libNCurses;
+  function putwin (win : PWINDOW; filep : Pointer) : Integer; cdecl;
+    external libNCurses;
+  function getwin (filep : Pointer) : PWINDOW; cdecl; external libNCurses;
+  function delay_output (ms : Integer) : Integer; cdecl; external libNCurses;
+  function flushinp : Integer; cdecl; external libNCurses;
+
+  { These routines delete the character under the cursor; all characters to the
+    right of the cursor on the same line are moved to the left one position and
+    the last character on the line is filled with a blank. The cursor position
+    does not change (after moving to y, x, if specified). (This does not imply
+    use of the hardware delete character feature.) }
+  function delch : Integer; cdecl; external libNCurses;
+  function wdelch (win : PWINDOW) : Integer; cdecl; external libNCurses;
+  function mvdelch (y : Integer; x : Integer) : Integer; cdecl;
+    external libNCurses;
+  function mvwdelch (win : PWINDOW; y : Integer; x : Integer) : Integer; cdecl;
+    external libNCurses;
+
+  { initscr is normally the first curses routine to call when initializing a
+    program. A few special routines sometimes need to be called before it; these
+    are slk_init, filter, ripoffline, use_env. For multiple-terminal
+    applications, newterm may be called before initscr.
+
+    The initscr code determines the terminal type and initializes all curses
+    data structures. initscr also causes the first call to refresh to clear the
+    screen. If errors occur, initscr writes an appropriate error message to
+    standard error and exits; otherwise, a pointer is returned to stdscr.
+
+    A program that outputs to more than one terminal should use the newterm
+    routine for each terminal instead of initscr. A program that needs to
+    inspect capabilities, so it can continue to run in a line-oriented mode if
+    the terminal cannot support a screen-oriented program, would also use
+    newterm. The routine newterm should be called once for each terminal. It
+    returns a variable of type SCREEN * which should be saved as a reference to
+    that terminal. The arguments are the type of the terminal to be used in
+    place of $TERM, a file pointer for output to the terminal, and another file
+    pointer for input from the terminal (if type is NULL, $TERM will be used).
+    The program must also call endwin for each terminal being used before
+    exiting from curses. If newterm is called more than once for the same
+    terminal, the first terminal referred to must be the last one for which
+    endwin is called.
+
+    A program should always call endwin before exiting or escaping from curses
+    mode temporarily. This routine restores tty modes, moves the cursor to the
+    lower left-hand corner of the screen and resets the terminal into the proper
+    non-visual mode. Calling refresh or doupdate after a temporary escape causes
+    the program to resume visual mode.
+
+    The isendwin routine returns TRUE if endwin has been called without any
+    subsequent calls to wrefresh, and FALSE otherwise.
+
+    The set_term routine is used to switch between different terminals. The
+    screen reference new becomes the new current terminal. The previous terminal
+    is returned by the routine. This is the only routine which manipulates
+    SCREEN pointers; all other routines affect only the current terminal.
+
+    The delscreen routine frees storage associated with the SCREEN data
+    structure. The endwin routine does not do this, so delscreen should be
+    called after endwin if a particular SCREEN is no longer needed. }
+  function initscr : PWINDOW; cdecl; external libNCurses;
+  function endwin : Integer; cdecl; external libNCurses;
+  function isendwin : Boolean; cdecl; external libNCurses;
+  function newterm (_type : PChar; outfd : Pointer; infd : Pointer) : PSCREEN;
+    cdecl; external libNCurses;
+  function set_term (new : PSCREEN) : PSCREEN; cdecl; external libNCurses;
+  procedure delscreen (sp : PSCREEN); cdecl; external libNCurses;
+
+  { Calling newwin creates and returns a pointer to a new window with the given
+    number of lines and columns. The upper left-hand corner of the window is at
+    line begin_y, column begin_x. If either nlines or ncols is zero, they
+    default to LINES - begin_y and COLS - begin_x. A new full-screen window is
+    created by calling newwin(0,0,0,0).
+
+    Calling delwin deletes the named window, freeing all memory associated with
+    it (it does not actually erase the window's screen image). Subwindows must
+    be deleted before the main window can be deleted.
+
+    Calling mvwin moves the window so that the upper left-hand corner is at
+    position (x, y). If the move would cause the window to be off the screen, it
+    is an error and the window is not moved. Moving subwindows is allowed, but
+    should be avoided.
+
+    Calling subwin creates and returns a pointer to a new window with the given
+    number of lines, nlines, and columns, ncols. The window is at position
+    (begin_y, begin_x) on the screen. (This position is relative to the screen,
+    and not to the window orig.) The window is made in the middle of the window
+    orig, so that changes made to one window will affect both windows. The
+    subwindow shares memory with the window orig. When using this routine, it is
+    necessary to call touchwin or touchline on orig before calling wrefresh on
+    the subwindow.
+
+    Calling derwin is the same as calling subwin, except that begin_y and
+    begin_x are relative to the origin of the window orig rather than the
+    screen. There is no difference between the subwindows and the derived
+    windows.
+
+    Calling mvderwin moves a derived window (or subwindow) inside its parent
+    window. The screen-relative parameters of the window are not changed. This
+    routine is used to display different parts of the parent window at the same
+    physical position on the screen.
+
+    Calling dupwin creates an exact duplicate of the window win.
+
+    Calling wsyncup touches all locations in ancestors of win that are changed
+    in win. If syncok is called with second argument TRUE then wsyncup is called
+    automatically whenever there is a change in the window.
+
+    The wsyncdown routine touches each location in win that has been touched in
+    any of its ancestor windows. This routine is called by wrefresh, so it
+    should almost never be necessary to call it manually.
+
+    The routine wcursyncup updates the current cursor position of all the
+    ancestors of the window to reflect the current cursor position of the
+    window. }
+  function newwin (nlines : Integer; ncols : Integer; begin_y : Integer;
+    begin_x : Intger) : PWINDOW; cdecl; external libNCurses;
+  function delwin (win : PWINDOW) : Integer; cdecl; external libNCurses;
+  function mvwin (win : PWINDOW; y : Integer; x : Integer) : Integer; cdecl;
+    external libNCurses;
+  function subwin (orig : PWINDOW; nlines : Integer; ncols : Integer; begin_y :
+    Integer; begin_x : Integer) : PWINDOW; cdecl; external libNCurses;
+  function derwin (orig : PWINDOW; nlines : Integer; ncols : Integer; begin_y :
+    Integer; begin_x : Integer) : PWINDOW; cdecl; external libNCurses;
+  function mvderwin (win : PWINDOW; par_y : Integer; par_x : Integer) : Integer;
+    cdecl; external libNCurses;
+  function dupwin (win : PWINDOW) : PWINDOW; cdecl; external libNCurses;
+  procedure wsyncup (win : PWINDOW); cdecl; external libNCurses;
+  function syncok (win : PWINDOW; bf : Boolean) : Integer; cdecl;
+    external libNCurses;
+  procedure wcursyncup (win : PWINDOW); cdecl; external libNCurses;
+  procedure wsyncdown (win : PWINDOW); cdecl; external libNCurses;
 
 
 implementation
