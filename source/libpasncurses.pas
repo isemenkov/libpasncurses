@@ -1140,6 +1140,198 @@ type
   procedure wcursyncup (win : PWINDOW); cdecl; external libNCurses;
   procedure wsyncdown (win : PWINDOW); cdecl; external libNCurses;
 
+  { The deleteln and wdeleteln routines delete the line under the cursor in the
+    window; all lines below the current line are moved up one line. The bottom
+    line of the window is cleared. The cursor position does not change.
+
+    The insdelln and winsdelln routines, for positive n, insert n lines into the
+    specified window above the current line. The n bottom lines are lost. For
+    negative n, delete n lines (starting with the one under the cursor), and
+    move the remaining lines up. The bottom n lines are cleared. The current
+    cursor position remains the same.
+
+    The insertln and winsertln routines insert a blank line above the current
+    line and the bottom line is lost. }
+  function deleteln : Integer; cdecl; external libNCurses;
+  function wdeleteln (win : PWINDOW) : Integer; cdecl; external libNCurses;
+  function insdelln (n : Integer) : Integer; cdecl; external libNCurses;
+  function winsdelln (win : PWINDOW; n : Integer) : Integer; cdecl;
+    external libNCurses;
+  function insertln : Integer; cdecl; external libNCurses;
+  function winsertln (win : PWINDOW) : Integer; cdecl; external libNCurses;
+
+  { The refresh and wrefresh routines (or wnoutrefresh and doupdate) must be
+    called to get actual output to the terminal, as other routines merely
+    manipulate data structures. The routine wrefresh copies the named window to
+    the physical terminal screen, taking into account what is already there to
+    do optimizations. The refresh routine is the same, using stdscr as the
+    default window. Unless leaveok has been enabled, the physical cursor of the
+    terminal is left at the location of the cursor for that window.
+
+    The wnoutrefresh and doupdate routines allow multiple updates with more
+    efficiency than wrefresh alone. In addition to all the window structures,
+    curses keeps two data structures representing the terminal screen: a
+    physical screen, describing what is actually on the screen, and a virtual
+    screen, describing what the programmer wants to have on the screen.
+
+    The routine wrefresh works by first calling wnoutrefresh, which copies the
+    named window to the virtual screen, and then calling doupdate, which
+    compares the virtual screen to the physical screen and does the actual
+    update. If the programmer wishes to output several windows at once, a series
+    of calls to wrefresh results in alternating calls to wnoutrefresh and
+    doupdate, causing several bursts of output to the screen. By first calling
+    wnoutrefresh for each window, it is then possible to call doupdate once,
+    resulting in only one burst of output, with fewer total characters
+    transmitted and less CPU time used. If the win argument to wrefresh is the
+    global variable curscr, the screen is immediately cleared and repainted from
+    scratch.
+
+    The phrase "copies the named window to the virtual screen" above is
+    ambiguous. What actually happens is that all touched (changed) lines in the
+    window are copied to the virtual screen. This affects programs that use
+    overlapping windows; it means that if two windows overlap, you can refresh
+    them in either order and the overlap region will be modified only when it is
+    explicitly changed. (But see the section on PORTABILITY below for a warning
+    about exploiting this behavior.)
+
+    The wredrawln routine indicates to curses that some screen lines are
+    corrupted and should be thrown away before anything is written over them. It
+    touches the indicated lines (marking them changed). The routine redrawwin()
+    touches the entire window. }
+  function refresh : Integer; cdecl; external libNCurses;
+  function wrefresh (win : PWINDOW) : Integer; cdecl; external libNCurses;
+  function wnoutrefresh (win : PWINDOW) : Integer; cdecl; external libNCurses;
+  function doupdate : Integer; cdecl; external libNCurses;
+  function redrawwin (win : PWINDOW) : Integer; cdecl; external libNCurses;
+  function wredrawln (win : PWINDOW; beg_line : Integer; num_lines : Integer) :
+    Integer; cdecl; external libNCurses;
+
+  { The getch, wgetch, mvgetch and mvwgetch, routines read a character from the
+    window. In no-delay mode, if no input is waiting, the value ERR is returned.
+    In delay mode, the program waits until the system passes text through to the
+    program. Depending on the setting of cbreak, this is after one character
+    (cbreak mode), or after the first newline (nocbreak mode). In half-delay
+    mode, the program waits until a character is typed or the specified timeout
+    has been reached.
+
+    Unless noecho has been set, then the character will also be echoed into the
+    designated window according to the following rules: If the character is the
+    current erase character, left arrow, or backspace, the cursor is moved one
+    space to the left and that screen position is erased as if delch had been
+    called. If the character value is any other KEY_ define, the user is alerted
+    with a beep call. Otherwise the character is simply output to the screen.
+
+    If the window is not a pad, and it has been moved or modified since the last
+    call to wrefresh, wrefresh will be called before another character is read.
+
+    If keypad is TRUE, and a function key is pressed, the token for that
+    function key is returned instead of the raw characters. Possible function
+    keys are defined in <curses.h> as macros with values outside the range of
+    8-bit characters whose names begin with KEY_. Thus, a variable intended to
+    hold the return value of a function key must be of short size or larger.
+
+    When a character that could be the beginning of a function key is received
+    (which, on modern terminals, means an escape character), curses sets a
+    timer. If the remainder of the sequence does not come in within the
+    designated time, the character is passed through; otherwise, the function
+    key value is returned. For this reason, many terminals experience a delay
+    between the time a user presses the escape key and the escape is returned to
+    the program.
+
+    The ungetch routine places ch back onto the input queue to be returned by
+    the next call to wgetch. There is just one input queue for all windows. }
+  function getch : Integer; cdecl; external libNCurses;
+  function wgetch (win : PWINDOW) : Integer; cdecl; external libNCurses;
+  function mvgetch (y : Integer; x : Integer) : Integer; cdecl;
+    external libNCurses;
+  function mvwgetch (win : PWINDOW; y : Integer; x : Integer) : Integer; cdecl;
+    external libNCurses;
+  function ungetch (ch : Integer) : Integer; cdecl; external libNCurses;
+  function has_key (ch : Integer) : Integer; cdecl; external libNCurses;
+
+  { The function getstr is equivalent to a series of calls to getch, until a
+    newline or carriage return is received (the terminating character is not
+    included in the returned string). The resulting value is placed in the area
+    pointed to by the character pointer str.
+
+    wgetnstr reads at most n characters, thus preventing a possible overflow of
+    the input buffer. Any attempt to enter more characters (other than the
+    terminating newline or carriage return) causes a beep. Function keys also
+    cause a beep and are ignored. The getnstr function reads from the stdscr
+    default window.
+
+    The user's erase and kill characters are interpreted. If keypad mode is on
+    for the window, KEY_LEFT and KEY_BACKSPACE are both considered equivalent to
+    the user's kill character.
+
+    Characters input are echoed only if echo is currently on. In that case,
+    backspace is echoed as deletion of the previous character (typically a left
+    motion). }
+  function getstr (str : PChar) : Integer; cdecl; external libNCurses;
+  function getnstr (str : PChar; n : Integer) : Integer; cdecl;
+    external libNCurses;
+  function wgetstr (win : PWINDOW; str : PChar) : Integer; cdecl;
+    external libNCurses;
+  function wgetnstr (win : PWINDOW; str : PChar; n : Integer) : Integer; cdecl;
+    external libNCurses;
+  function mvgetstr (y : Integer; x : Integer; str : PChar) : Integer; cdecl;
+    external libNCurses;
+  function mvwgetstr (win : PWINDOW; y : Integer; x : Integer; str : PChar) :
+    Integer; cdecl; external libNCurses;
+  function mvgetnstr (y : Integer; x : Integer; str : PChar; n : Integer) :
+    Integer; cdecl; external libNCurses;
+  function mvwgetnstr (win : PWINDOW;  y : Integer; x : Integer; str : PChar;
+    n : Integer) : Integer; cdecl; external libNCurses;
+
+  { The baudrate routine returns the output speed of the terminal. The number
+    returned is in bits per second, for example 9600, and is an integer.
+
+    The erasechar routine returns the user's current erase character.
+
+    The erasewchar routine stores the current erase character in the location
+    referenced by ch. If no erase character has been defined, the routine fails
+    and the location referenced by ch is not changed.
+
+    The has_ic routine is true if the terminal has insert- and delete- character
+    capabilities.
+
+    The has_il routine is true if the terminal has insert- and delete-line
+    capabilities, or can simulate them using scrolling regions. This might be
+    used to determine if it would be appropriate to turn on physical scrolling
+    using scrollok.
+
+    The killchar routine returns the user's current line kill character.
+
+    The killwchar routine stores the current line-kill character in the location
+    referenced by ch. If no line-kill character has been defined, the routine
+    fails and the location referenced by ch is not changed.
+
+    The longname routine returns a pointer to a static area containing a verbose
+    description of the current terminal. The maximum length of a verbose
+    description is 128 characters. It is defined only after the call to initscr
+    or newterm. The area is overwritten by each call to newterm and is not
+    restored by set_term, so the value should be saved between calls to newterm
+    if longname is going to be used with multiple terminals.
+
+    If a given terminal does not support a video attribute that an application
+    program is trying to use, curses may substitute a different video attribute
+    for it. The termattrs and term_attrs functions return a logical OR of all
+    video attributes supported by the terminal using A_ and WA_ constants
+    respectively. This information is useful when a curses program needs
+    complete control over the appearance of the screen.
+
+    The termname routine returns the terminal name used by setupterm. }
+  function baudrate : Integer; cdecl; external libNCurses;
+  function erasechar : Char; cdecl; external libNCurses;
+  function erasewchar (ch : PWideChar) : Integer; cdecl; external libNCurses;
+  function has_ic : Boolean; cdecl; external libNCurses;
+  function has_il : Boolean; cdecl; external libNCurses;
+  function killchar : Char; cdecl; external libNCurses;
+  function killwchar (ch : PWideChar) : Integer; cdecl; external libNCurses;
+  function longname : PChar; cdecl; external libNCurses;
+  function term_attrs : attr_t; cdecl; external libNCurses;
+  function termattrs : chtype; cdecl; external libNCurses;
+  function termname : PChar; cdecl; external libNCurses;
 
 implementation
 
