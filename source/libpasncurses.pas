@@ -1333,6 +1333,63 @@ type
   function termattrs : chtype; cdecl; external libNCurses;
   function termname : PChar; cdecl; external libNCurses;
 
+  { These routines return the character, of type chtype, at the current position
+    in the named window. If any attributes are set for that position, their
+    values are OR'ed into the value returned. Constants defined in <curses.h>
+    can be used with the & (logical AND) operator to extract the character or
+    attributes alone. }
+  function inch : chtype; cdecl; external libNCurses;
+  function winch (win : PWINDOW) : chtype; cdecl; external libNCurses;
+  function mvinch (y : Integer; x : Integer) : chtype; cdecl;
+    external libNCurses;
+  function mvwinch (win : PWINDOW; y : Integer; x : Integer) : chtype; cdecl;
+    external libNCurses;
+
+  { These routines return a NULL-terminated array of chtype quantities, starting
+    at the current cursor position in the named window and ending at the right
+    margin of the window. The four functions with n as the last argument, return
+    a leading substring at most n characters long (exclusive of the trailing
+    (chtype)0). Constants defined in <curses.h> can be used with the & (logical
+    AND) operator to extract the character or the attribute alone from any
+    position in the chstr [see curs_inch]. }
+  function inchstr (chstr : pchtype) : Integer; cdecl; external libNCurses;
+  function inchnstr (chstr : pchtype; n : Integer) : Integer; cdecl;
+    external libNCurses;
+  function winchstr (win : PWINDOW; chstr : pchtype) : Integer; cdecl;
+    external libNCurses;
+  function winchnstr (win : PWINDOW; chstr : pchtype; n : Integer) : Integer;
+    cdecl; external libNCurses;
+  function mvinchstr (y : Integer; x : Integer; chstr : pchtype) : Integer;
+    cdecl; external libNCurses;
+  function mvinchnstr (y : Integer; x : Integer; chstr : pchtype; n : Integer) :
+    Integer; cdecl; external libNCurses;
+  function mvwinchstr (win : PWINDOW; y : Integer; x : Integer; chstr : pchtype)
+    : Integer; cdecl; external libNCurses;
+  function mvwinchnstr (win : PWINDOW; y : Integer; x : Integer;
+    chstr : pchtype; n : Integer) : Integer; cdecl; external libNCurses;
+
+  { These routines return a string of characters in str, extracted starting at
+    the current cursor position in the named window. Attributes are stripped
+    from the characters. The four functions with n as the last argument return a
+    leading substring at most n characters long (exclusive of the trailing
+    NUL). }
+  function instr (str : PChar) : Integer; cdecl; external libNCurses;
+  function innstr (str : PChar; n : Integer) : Integer; cdecl;
+    external libNCurses;
+  function winstr (win : PWINDOW; str : PChar) : Integer; cdecl;
+    external libNCurses;
+  function winnstr (win : PWINDOW; str : PChar; n : Integer) : Integer; cdecl;
+    external libNCurses;
+  function mvinstr (y : Integer; x : Integer; str : PChar) : Integer; cdecl;
+    external libNCurses;
+  function mvinnstr (y : Integer; x : Integer; str : PChar; n : Integer) :
+    Integer; cdecl; external libNCurses;
+  function mvwinstr (win : PWINDOW; y : Integer; x : Integer; str : PChar) :
+    Integer; cdecl; external libNCurses;
+  function mvwinnstr (win : PWINDOW; y : Integer; x : Integer; str : PChar;
+    n : Integer) : Integer; cdecl; external libNCurses;
+
+
 implementation
 
 end.
