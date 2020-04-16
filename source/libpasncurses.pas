@@ -1389,6 +1389,63 @@ type
   function mvwinnstr (win : PWINDOW; y : Integer; x : Integer; str : PChar;
     n : Integer) : Integer; cdecl; external libNCurses;
 
+  { The refresh and wrefresh routines (or wnoutrefresh and doupdate) must be
+    called to get actual output to the terminal, as other routines merely
+    manipulate data structures. The routine wrefresh copies the named window to
+    the physical terminal screen, taking into account what is already there to
+    do optimizations. The refresh routine is the same, using stdscr as the
+    default window. Unless leaveok has been enabled, the physical cursor of the
+    terminal is left at the location of the cursor for that window.
+
+    The wnoutrefresh and doupdate routines allow multiple updates with more
+    efficiency than wrefresh alone. In addition to all the window structures,
+    curses keeps two data structures representing the terminal screen: a
+    physical screen, describing what is actually on the screen, and a virtual
+    screen, describing what the programmer wants to have on the screen.
+
+    The routine wrefresh works by first calling wnoutrefresh, which copies the
+    named window to the virtual screen, and then calling doupdate, which
+    compares the virtual screen to the physical screen and does the actual
+    update. If the programmer wishes to output several windows at once, a series
+    of calls to wrefresh results in alternating calls to wnoutrefresh and
+    doupdate, causing several bursts of output to the screen. By first calling
+    wnoutrefresh for each window, it is then possible to call doupdate once,
+    resulting in only one burst of output, with fewer total characters
+    transmitted and less CPU time used. If the win argument to wrefresh is the
+    global variable curscr, the screen is immediately cleared and repainted from
+    scratch.
+
+    The phrase "copies the named window to the virtual screen" above is
+    ambiguous. What actually happens is that all touched (changed) lines in the
+    window are copied to the virtual screen. This affects programs that use
+    overlapping windows; it means that if two windows overlap, you can refresh
+    them in either order and the overlap region will be modified only when it is
+    explicitly changed. (But see the section on PORTABILITY below for a warning
+    about exploiting this behavior.)
+
+    The wredrawln routine indicates to curses that some screen lines are
+    corrupted and should be thrown away before anything is written over them. It
+    touches the indicated lines (marking them changed). The routine redrawwin()
+    touches the entire window. }
+  function refresh : Integer; cdecl; external libNCurses;
+  function wrefresh (win : PWINDOW) : Integer; cdecl; external libNCurses;
+  function wnoutrefresh (win : PWINDOW) : Integer; cdecl; external libNCurses;
+  function doupdate : Integer; cdecl; external libNCurses;
+  function redrawwin (win : PWINDOW) : Integer; cdecl; external libNCurses;
+  function wredrawln (win : PWINDOW; beg_line : Integer; num_lines : Integer) :
+    Integer; cdecl; external libNCurses;
+
+  { These routines insert the character ch before the character under the
+    cursor. All characters to the right of the cursor are moved one space to the
+    right, with the possibility of the rightmost character on the line being
+    lost. The insertion operation does not change the cursor position. }
+  function insch (ch : chtype) : Integer; cdecl; external libNCurses;
+  function winsch (win : PWINDOW; ch : chtype) : Integer; cdecl;
+    external libNCurses;
+  function mvinsch (y : Integer; x : Integer; ch : chtype) : Integer; cdecl;
+    external libNCurses;
+  function mvwinsch (win : PWINDOW; y : Integer; x : Integer; ch : chtype) :
+    Integer; cdecl; external libNCurses;
 
 implementation
 
