@@ -368,6 +368,7 @@ type
   function mvwchgat (win : PWINDOW; y : Integer; x : Integer; n : Integer;
     attr : attr_t; color : Shortint; const opts : Pointer) : Integer; cdecl;
     external libNCurses;
+  function PAIR_NUMBER (attr : Integer) : Integer; cdecl; external libNCurses;
 
   { The baudrate routine returns the output speed of the terminal. The number
     returned is in bits per second, for example 9600, and is an integer.
@@ -1025,6 +1026,8 @@ type
     external libNCurses;
   function mvwdelch (win : PWINDOW; y : Integer; x : Integer) : Integer; cdecl;
     external libNCurses;
+  function mvcur (oldrow : Integer; oldcol : Integer; newrow : Integer;
+    newcol : Integer) : Integer; cdecl; external libNCurses;
 
   { initscr is normally the first curses routine to call when initializing a
     program. A few special routines sometimes need to be called before it; these
@@ -1446,6 +1449,289 @@ type
     external libNCurses;
   function mvwinsch (win : PWINDOW; y : Integer; x : Integer; ch : chtype) :
     Integer; cdecl; external libNCurses;
+
+  { These routines insert a character string (as many characters as will fit on
+    the line) before the character under the cursor. All characters to the right
+    of the cursor are shifted right with the possibility of the rightmost
+    characters on the line being lost. The cursor position does not change
+    (after moving to y, x, if specified). The functions with n as the last
+    argument insert a leading substring of at most n characters. If n<=0, then
+    the entire string is inserted. }
+  function insstr (const str : PChar) : Integer; cdecl; external libNCurses;
+  function insnstr (const str : PChar; n : Integer) : Integer; cdecl;
+    external libNCurses;
+  function winsstr (win : PWINDOW; const str : PChar) : Integer; cdecl;
+    external libNCurses;
+  function winsnstr (win : PWINDOW; const str : PChar; n : Integer) : Integer;
+    cdecl; external libNCurses;
+  function mvinsstr (y : Integer; x : Integer; const str : PChar) : Integer;
+    cdecl; external libNCurses;
+  function mvinsnstr (y : Integer; x : Integer; const str : PChar; n : Integer)
+    : Integer; cdecl; external libNCurses;
+  function mvwinsstr (win : PWINDOW; y : Integer; x : Integer; const str :
+    PChar) : Integer; cdecl; external libNCurses;
+  function mvwinsnstr (win : PWINDOW; y : Integer; x : Integer; const str :
+    PChar; n : Integer) : Integer; cdecl; external libNCurses;
+
+  { The touchwin and touchline routines throw away all optimization information
+    about which parts of the window have been touched, by pretending that the
+    entire window has been drawn on. This is sometimes necessary when using
+    overlapping windows, since a change to one window affects the other window,
+    but the records of which lines have been changed in the other window do not
+    reflect the change. The routine touchline only pretends that count lines
+    have been changed, beginning with line start.
+
+    The untouchwin routine marks all lines in the window as unchanged since the
+    last call to wrefresh.
+
+    The wtouchln routine makes n lines in the window, starting at line y, look
+    as if they have (changed=1) or have not (changed=0) been changed since the
+    last call to wrefresh.
+
+    The is_linetouched and is_wintouched routines return TRUE if the specified
+    line/window was modified since the last call to wrefresh; otherwise they
+    return FALSE. In addition, is_linetouched returns ERR if line is not valid
+    for the given window. }
+  function touchwin (win : PWINDOW) : Integer; cdecl; external libNCurses;
+  function touchline (win : PWINDOW; start : Integer; count : Integer) :
+    Integer; cdecl; external libNCurses;
+  function untouchwin (win : PWINDOW) : Integer; cdecl; external libNCurses;
+  function wtouchln (win : PWINDOW; y : Integer; n : Integer; changed : Integer)
+    : Integer; cdecl; external libNCurses;
+  function is_linetouched (win : PWINDOW; line : Integer) : Boolean; cdecl;
+    external libNCurses;
+  function is_wintouched (win : PWINDOW) : Boolean; cdecl; external libNCurses;
+
+  { These routines move the cursor associated with the window to line y and
+    column x. This routine does not move the physical cursor of the terminal
+    until refresh is called. The position specified is relative to the upper
+    left-hand corner of the window, which is (0,0). }
+  function move (y : Integer; x : Integer) : Integer; cdecl;
+    external libNCurses;
+  function wmove (win : PWindow; y : Integer; x : Integer) : Integer; cdecl;
+    external libNCurses;
+
+  { The printw, wprintw, mvprintw and mvwprintw routines are analogous to printf
+    [see printf]. In effect, the string that would be output by printf is output
+    instead as though waddstr were used on the given window.
+
+    The vwprintw and wv_printw routines are analogous to vprintf [see printf]
+    and perform a wprintw using a variable argument list. The third argument is
+    a va_list, a pointer to a list of arguments, as defined in <stdarg.h>. }
+  function printw (const fmt : PChar; ...) : Integer; cdecl;
+    external libNCurses;
+  function wprintw (win : PWINDOW; const ftm : PChar) : Integer; cdecl; varargs;
+    external libNCurses;
+  function mvprintw (y : Integer; x : Integer; const ftm : PChar) : Integer;
+    cdecl; varargs; external libNCurses;
+  function mvwprintw (win : PWINDOW; y : Integer; x : Integer; const fmt :
+    PChar) : Integer; cdecl; varargs; external libNCurses;
+  function vwprintw (win : PWINDOW; const fmt : PChar) : Integer; cdecl;
+    varargs; external libNCurses;
+  function vw_printw (win : PWINDOW; const fmt : PChar) : Integer; cdecl;
+    varargs; external libNCurses;
+
+  { The scanw, wscanw and mvscanw routines are analogous to scanf [see scanf].
+    The effect of these routines is as though wgetstr were called on the window,
+    and the resulting line used as input for sscanf. Fields which do not map to
+    a variable in the fmt field are lost.
+
+    The vwscanw and vw_scanw routines are analogous to vscanf. They perform a
+    wscanw using a variable argument list. The third argument is a va_list, a
+    pointer to a list of arguments, as defined in <stdarg.h>. }
+  function scanw (fmt : PChar) : Integer; cdecl; varargs; external libNCurses;
+  function wscanw (win : PWINDOW; ftm : PChar) : Integer; cdecl; varargs;
+    external libNCurses;
+  function mvscanw (y : Integer; x : Integer; fmt : PChar) : Integer; cdecl;
+    varargs; external libNCurses;
+  function mvwscanw (win : PWINDOW; y : Integer; x : Integer; fmt : PChar) :
+    Integer; cdecl; varargs; external libNCurses;
+  function vw_scanw (win : PWINDOW; fmt : PChar) : Integer; cdecl; varargs;
+    external libNCurses;
+  function vwscanw (win : PWINDOW; fmt : PChar) : Integer; cdecl; varargs;
+    external libNCurses;
+
+  { The newpad routine creates and returns a pointer to a new pad data structure
+    with the given number of lines, nlines, and columns, ncols. A pad is like a
+    window, except that it is not restricted by the screen size, and is not
+    necessarily associated with a particular part of the screen. Pads can be
+    used when a large window is needed, and only a part of the window will be on
+    the screen at one time. Automatic refreshes of pads (e.g., from scrolling or
+    echoing of input) do not occur. It is not legal to call wrefresh with a pad
+    as an argument; the routines prefresh or pnoutrefresh should be called
+    instead. Note that these routines require additional parameters to specify
+    the part of the pad to be displayed and the location on the screen to be
+    used for the display.
+
+    The subpad routine creates and returns a pointer to a subwindow within a pad
+    with the given number of lines, nlines, and columns, ncols. Unlike subwin,
+    which uses screen coordinates, the window is at position (begin_x, begin_y)
+    on the pad. The window is made in the middle of the window orig, so that
+    changes made to one window affect both windows. During the use of this
+    routine, it will often be necessary to call touchwin or touchline on orig
+    before calling prefresh.
+
+    The prefresh and pnoutrefresh routines are analogous to wrefresh and
+    wnoutrefresh except that they relate to pads instead of windows. The
+    additional parameters are needed to indicate what part of the pad and screen
+    are involved. pminrow and pmincol specify the upper left-hand corner of the
+    rectangle to be displayed in the pad. sminrow, smincol, smaxrow, and smaxcol
+    specify the edges of the rectangle to be displayed on the screen. The lower
+    right-hand corner of the rectangle to be displayed in the pad is calculated
+    from the screen coordinates, since the rectangles must be the same size.
+    Both rectangles must be entirely contained within their respective
+    structures. Negative values of pminrow, pmincol, sminrow, or smincol are
+    treated as if they were zero.
+
+    The pechochar routine is functionally equivalent to a call to addch followed
+    by a call to refresh, a call to waddch followed by a call to wrefresh, or a
+    call to waddch followed by a call to prefresh. The knowledge that only a
+    single character is being output is taken into consideration and, for
+    non-control characters, a considerable performance gain might be seen by
+    using these routines instead of their equivalents. In the case of pechochar,
+    the last location of the pad on the screen is reused for the arguments to
+    prefresh.
+
+    The pecho_wchar function is the analogous wide-character form of pechochar.
+    It outputs one character to a pad and immediately refreshes the pad. It does
+    this by a call to wadd_wch followed by a call to prefresh. }
+  function newpad (nlines : Integer; ncols : Integer) : PWINDOW; cdecl;
+    external libNCurses;
+  function subpad (orig : PWINDOW; nlines : Integer; ncols : Integer; begin_y :
+    Integer; begin_x : Integer) : PWINDOW; cdecl; external libNCurses;
+  function prefresh (pad : PWINDOW; pminrow : Integer; pmincol : Integer;
+    sminrow : Integer; smincol : Integer; smaxrow : Integer; smaxcol : Integer)
+    : Integer; cdecl; external libNCurses;
+  function pnoutrefresh (pad : PWINDOW; pminrow : Integer; pmincol : Integer;
+    sminrow : Integer; smincol : Integer; smaxrow : Integer; smaxcol : Integer)
+    : Integer; cdecl; external libNCurses;
+  function pechochar (pad : PWINDOW; ch : chtype) : Integer; cdecl;
+    external libNCurses;
+  //function pecho_wchar (pad : PWINDOW; const wch : cchar_t) : Integer; cdecl;
+  //  external libNCurses;
+
+  { The scr_dump routine dumps the current contents of the virtual screen to the
+    file filename.
+
+    The scr_restore routine sets the virtual screen to the contents of filename,
+    which must have been written using scr_dump. The next call to doupdate
+    restores the screen to the way it looked in the dump file.
+
+    The scr_init routine reads in the contents of filename and uses them to
+    initialize the curses data structures about what the terminal currently has
+    on its screen. If the data is determined to be valid, curses bases its next
+    update of the screen on this information rather than clearing the screen and
+    starting from scratch. scr_init is used after initscr or a system call to
+    share the screen with another process which has done a scr_dump after its
+    endwin call. The data is declared invalid if the terminfo capabilities rmcup
+    and nrrmc exist; also if the terminal has been written to since the
+    preceding scr_dump call.
+
+    The scr_set routine is a combination of scr_restore and scr_init. It tells
+    the program that the information in filename is what is currently on the
+    screen, and also what the program wants on the screen. This can be thought
+    of as a screen inheritance function.
+
+    To read (write) a window from (to) a file, use the getwin and putwin
+    routines [see curs_util]. }
+  function scr_dump (const filename : PChar) : Integer; cdecl;
+    external libNCurses;
+  function scr_restore (const filename : PChar) : Integer; cdecl;
+    external libNCurses;
+  function scr_init (const filename : PChar) : Integer; cdecl;
+    external libnCurses;
+  function scr_set (const filename : PChar) : Integer; cdecl;
+    external libNCurses;
+
+  { The scroll routine scrolls the window up one line. This involves moving the
+    lines in the window data structure. As an optimization, if the scrolling
+    region of the window is the entire screen, the physical screen may be
+    scrolled at the same time.
+
+    For positive n, the scrl and wscrl routines scroll the window up n lines
+    (line i+n becomes i); otherwise scroll the window down n lines. This
+    involves moving the lines in the window character image structure. The
+    current cursor position is not changed.
+
+    For these functions to work, scrolling must be enabled via scrollok. }
+  function scroll (win : PWINDOW) : Integer; cdecl; external libNCurses;
+  function scrl (n : Integer) : Integer; cdecl; external libNCurses;
+  function wscrl (win : PWINDOW; n : Integer) : Integer; cdecl;
+    external libNCurses;
+
+  { The slk* functions manipulate the set of soft function-key labels that exist
+    on many terminals. For those terminals that do not have soft labels, curses
+    takes over the bottom line of stdscr, reducing the size of stdscr and the
+    variable LINES. curses standardizes on eight labels of up to eight
+    characters each. In addition to this, the ncurses implementation supports a
+    mode where it simulates 12 labels of up to five characters each. This is
+    most common for todays PC like enduser devices. Please note that ncurses
+    simulates this mode by taking over up to two lines at the bottom of the
+    screen, it does not try to use any hardware support for this mode.
+
+    The slk_init routine must be called before initscr or newterm is called. If
+    initscr eventually uses a line from stdscr to emulate the soft labels, then
+    fmt determines how the labels are arranged on the screen. Setting fmt to 0
+    indicates a 3-2-3 arrangement of the labels, 1 indicates a 4-4 arrangement
+    and 2 indicates the PC like 4-4-4 mode. If fmt is set to 3, it is again the
+    PC like 4-4-4 mode, but in addition an index line is generated, helping the
+    user to identify the key numbers easily.
+
+    The slk_set routine requires labnum to be a label number, from 1 to 8 (resp.
+    12); label must be the string to be put on the label, up to eight (resp.
+    five) characters in length. A null string or a null pointer sets up a blank
+    label. fmt is either 0, 1, or 2, indicating whether the label is to be
+    left-justified, centered, or right-justified, respectively, within the
+    label.
+
+    The slk_refresh and slk_noutrefresh routines correspond to the wrefresh and
+    wnoutrefresh routines.
+
+    The slk_label routine returns the current label for label number labnum,
+    with leading and trailing blanks stripped.
+
+    The slk_clear routine clears the soft labels from the screen.
+
+    The slk_restore routine restores the soft labels to the screen after a
+    slk_clear has been performed.
+
+    The slk_touch routine forces all the soft labels to be output the next time
+    a slk_noutrefresh is performed.
+
+    The slk_attron, slk_attrset, slk_attroff and slk_attr routines correspond to
+    attron, attrset, attroff and attr_get. They have an effect only if soft
+    labels are simulated on the bottom line of the screen. The default highlight
+    for soft keys is A_STANDOUT (as in System V curses, which does not document
+    this fact).
+
+    The slk_color routine corresponds to color_set. It has an effect only if
+    soft labels are simulated on the bottom line of the screen. }
+  function slk_init (fmt : Integer) : Integer; cdecl; external libNCurses;
+  function slk_set (labnum : Integer; const lbl : PChar; fmt : Integer) :
+    Integer; cdecl; external libNCurses;
+  function slk_refresh : Integer; cdecl; external libNCurses;
+  function slk_noutrefresh : Integer; cdecl; external libNCurses;
+  function slk_label (labnum : Integer) : PChar; cdecl; external libNCurses;
+  function slk_clear : Integer; cdecl; external libNCurses;
+  function slk_restore : Integer; cdecl; external libNCurses;
+  function slk_touch : Integer; cdecl; external libNCurses;
+  function slk_attron (const attrs : chtype) : Integer; cdecl;
+    external libNCurses;
+  function slk_attroff (const attrs : chtype) : Integer; cdecl;
+    external libNCurses;
+  function slk_attrset (const attrs : chtype) : Integer; cdecl;
+    external libNCurses;
+  function slk_attr_on (attrs : attr_t; opts : Pointer) : Integer; cdecl;
+    external libNCurses;
+  function slk_attr_off (const attrs : attr_t; opts : Pointer) : Integer; cdecl;
+    external libNCurses;
+  function slk_attr_set (const attrs : attr_t; color_pair_number : Shortint;
+    opts : Pointer) : Integer; cdecl; external libNCurses;
+  function slk_attr : attr_t; cdecl; external libNCurses;
+  function slk_color (color_pair_number : Shortint) : Integer; cdecl;
+    external libNCurses;
+
+
 
 implementation
 
