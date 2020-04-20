@@ -174,7 +174,7 @@ type
 
   { Curses uses a helper function.  Define our type for this to simplify
     extending it for the sp-funcs feature. }
-  NCURSES_OUTC = function (Value : Integer) : Integer of object;
+  NCURSES_OUTC = function (putc : Integer) : Integer of object;
 
   ripoffline_init_callback = function (win : PWINDOW; val : Integer) : Integer
     of object;
@@ -1014,6 +1014,7 @@ type
   function getwin (filep : Pointer) : PWINDOW; cdecl; external libNCurses;
   function delay_output (ms : Integer) : Integer; cdecl; external libNCurses;
   function flushinp : Integer; cdecl; external libNCurses;
+  procedure use_tioctl (val : Boolean); cdecl; external libNCurses;
 
   { These routines delete the character under the cursor; all characters to the
     right of the cursor on the same line are moved to the left one position and
@@ -1731,7 +1732,50 @@ type
   function slk_color (color_pair_number : Shortint) : Integer; cdecl;
     external libNCurses;
 
+  { The vidputs routine displays the string on the terminal in the video
+    attribute mode attrs, which is any combination of the attributes listed in
+    curses. The characters are passed to the putchar-like routine putc.
 
+    The vidattr routine is like the vidputs routine, except that it outputs
+    through putchar.
+
+    The vid_attr and vid_puts routines correspond to vidattr and vidputs,
+    respectively. They use a set of arguments for representing the video
+    attributes plus color, i.e., one of type attr_t for the attributes and one
+    of short for the color_pair number. The vid_attr and vid_puts routines are
+    designed to use the attribute constants with the WA_ prefix. The opts
+    argument is reserved for future use. Currently, applications must provide a
+    null pointer for that argument. }
+  function vidputs (attrs : chtype; putc : NCURSES_OUTC) : Integer; cdecl;
+    external libNCurses;
+  function vidattr (attrs : chtype) : Integer; cdecl; external libNCurses;
+
+  { These low-level routines must be called by programs that have to deal
+    directly with the terminfo database to handle certain terminal capabilities,
+    such as programming function keys. For all other functionality, curses
+    routines are more suitable and their use is recommended. }
+  function tigetflag (const capname : PChar) : Integer; cdecl;
+    external libNCurses;
+  function tigetnum (const capname : PChar) : Integer; cdecl;
+    external libNCurses;
+  function tigetstr (const capname : PChar) : PChar; cdecl;
+    external libNCurses;
+  function putp (const str : PChar) : Integer; cdecl; external libNCurses;
+  function tparm (const str : PChar) : PChar; cdecl; varargs;
+    external libNCurses;
+  function tiparm (const str : PChar) : PChar; cdecl; varargs;
+    external libNCurses;
+
+  { These functions are not in X/Open, but we use them in macro definitions: }
+  function getattrs (const win : PWINDOW) : Integer; cdecl; external libNCurses;
+  function getcurx (const win : PWINDOW) : Integer; cdecl; external libNCurses;
+  function getcury (const win : PWINDOW) : Integer; cdecl; external libNCurses;
+  function getbegx (const win : PWINDOW) : Integer; cdecl; external libNCurses;
+  function getbegy (const win : PWINDOW) : Integer; cdecl; external libNCurses;
+  function getmaxx (const win : PWINDOW) : Integer; cdecl; external libNCurses;
+  function getmaxy (const win : PWINDOW) : Integer; cdecl; external libNCurses;
+  function getparx (const win : PWINDOW) : Integer; cdecl; external libNCurses;
+  function getpary (const win : PWINDOW) : Integer; cdecl; external libNCurses;
 
 implementation
 
