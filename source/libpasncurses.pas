@@ -175,6 +175,10 @@ type
   { Curses uses a helper function.  Define our type for this to simplify
     extending it for the sp-funcs feature. }
   NCURSES_OUTC = function (putc : Integer) : Integer of object;
+  NCURSES_WINDOW_CB = function (win : PWINDOW; ptr : Pointer) : Integer of
+    object;
+  NCURSES_SCREEN_CB = function (scr : PSCREEN; ptr : Pointer) : Integer of
+    object;
 
   ripoffline_init_callback = function (win : PWINDOW; val : Integer) : Integer
     of object;
@@ -1731,6 +1735,8 @@ type
   function slk_attr : attr_t; cdecl; external libNCurses;
   function slk_color (color_pair_number : Shortint) : Integer; cdecl;
     external libNCurses;
+  function extended_slk_color (val : Integer) : Integer; cdecl;
+    external libNCurses;
 
   { The vidputs routine displays the string on the terminal in the video
     attribute mode attrs, which is any combination of the attributes listed in
@@ -1776,6 +1782,199 @@ type
   function getmaxy (const win : PWINDOW) : Integer; cdecl; external libNCurses;
   function getparx (const win : PWINDOW) : Integer; cdecl; external libNCurses;
   function getpary (const win : PWINDOW) : Integer; cdecl; external libNCurses;
+
+  { This is an extension to the curses library. It provides callers with a hook
+    into the ncurses data to resize windows, primarily for use by programs
+    running in an X Window terminal (e.g., xterm). The function resizeterm
+    resizes the standard and current windows to the specified dimensions, and
+    adjusts other bookkeeping data used by the ncurses library that record the
+    window dimensions.
+
+    Most of the work is done by the inner function resize_term. The outer
+    function resizeterm adds bookkeeping for the SIGWINCH handler. When resizing
+    the windows, resize_term blank-fills the areas that are extended. The
+    calling application should fill in these areas with appropriate data. The
+    resize_term function attempts to resize all windows. However, due to the
+    calling convention of pads, it is not possible to resize these without
+    additional interaction with the application.
+
+    A support function is_term_resized is provided so that applications can
+    check if the resize_term function would modify the window structures. It
+    returns TRUE if the windows would be modified, and FALSE otherwise. }
+  function is_term_resized (lines : Integer; columns : Integer) : Boolean;
+    cdecl; external libNCurses;
+  function resize_term (lines : Integer; columns : Integer) : Integer; cdecl;
+    external libNCurses;
+  function resizeterm (lines : Integer; columns : Integer) : Integer; cdecl;
+    external libNCurses;
+
+  { This is an extension to the curses library. It permits an application to
+    determine the string which is defined in the terminfo for specific
+    keycodes. }
+  function keybound (keycode : Integer; count : Integer) : PChar; cdecl
+    external libNCurses;
+
+  { These functions are extensions to the curses library which do not fit easily
+    into other categories.
+
+    Use curses_version() to get the version number, including patch level of the
+    library, e.g., 5.0.19991023
+
+    The use_extended_names() function controls whether the calling application
+    is able to use user-defined or nonstandard names which may be compiled into
+    the terminfo description, i.e., via the terminfo or termcap interfaces.
+    Normally these names are available for use, since the essential decision is
+    made by using the -x option of tic to compile extended terminal definitions.
+    However you can disable this feature to ensure compatibility with other
+    implementations of curses. }
+  function curses_version : PChar; cdecl; external libNCurses;
+  function use_extended_names (enable : Boolean) : Integer; cdecl;
+    external libNCurses;
+  function alloc_pair (val1 : Integer; val2 : Integer) : Integer; cdecl;
+    external libNCurses;
+
+  { The use_default_colors() and assume_default_colors() functions are
+    extensions to the curses library. They are used with terminals that support
+    ISO 6429 color, or equivalent. These terminals allow the application to
+    reset color to an unspecified default value (e.g., with SGR 39 or SGR 49).
+
+    Applications that paint a colored background over the whole screen do not
+    take advantage of SGR 39 and SGR 49. Some applications are designed to work
+    with the default background, using colors only for text. For example, there
+    are several implementations of the ls program which use colors to denote
+    different file types or permissions. These "color ls" programs do not
+    necessarily modify the background color, typically using only the setaf
+    terminfo capability to set the foreground color. Full-screen applications
+    that use default colors can achieve similar visual effects.
+
+    The first function, use_default_colors() tells the curses library to assign
+    terminal default foreground/background colors to color number -1. So
+    init_pair(x,COLOR_RED,-1) will initialize pair x as red on default
+    background and init_pair(x,-1,COLOR_BLUE) will initialize pair x as default
+    foreground on blue.
+
+    The other, assume_default_colors() is a refinement which tells which colors
+    to paint for color pair 0. This function recognizes a special color
+    number -1, which denotes the default terminal color.
+
+    The following are equivalent:
+
+        use_default_colors()
+        assume_default_colors(-1,-1);
+    These are ncurses extensions. For other curses implementations, color
+    number -1 does not mean anything, just as for ncurses before a successful
+    call of use_default_colors() or assume_default_colors().
+
+    Other curses implementations do not allow an application to modify color
+    pair 0. They assume that the background is COLOR_BLACK, but do not ensure
+    that the color pair 0 is painted to match the assumption. If your
+    application does not use either use_default_colors() or
+    assume_default_colors() ncurses will paint a white foreground (text) with
+    black background for color pair 0. }
+  function use_default_colors : Integer; cdecl; external libNCurses;
+  function assume_default_colors (fg : Integer; bg : Integer) : Integer; cdecl;
+    external libNCurses;
+  function extended_color_content (val : Integer; ptr1 : PInteger; ptr2 :
+    PInteger; ptr3 : PInteger) : Integer; cdecl; external libNCurses;
+  function extended_pair_content (val : Integer; ptr1 : PInteger; ptr2 :
+    PInteger) : Integer; cdecl; external libNCurses;
+
+  { This is an extension to the curses library. It permits an application to
+    define keycodes with their corresponding control strings, so that the
+    ncurses library will interpret them just as it would the predefined codes in
+    the terminfo database.
+
+    If the given string is null, any existing definition for the keycode is
+    removed. Similarly, if the given keycode is negative or zero, any existing
+    string for the given definition is removed. }
+  function define_key (const definition : PChar; keycode : Integer) : Integer;
+    cdecl; external libNCurses;
+
+  { These functions are extensions - not in X/Open Curses. }
+  function find_pair (val1 : Integer; val2 : Integer) : Integer; cdecl;
+    external libNCurses;
+  function free_pair (val : Integer) : Integer; cdecl; external libNCurses;
+  function get_escdelay : Integer; cdecl; external libNCurses;
+  function init_extended_color (val1 : Integer; val2 : Integer; val3 :
+    Integer; val4 : Integer) : Integer; cdecl; external libNCurses;
+  function init_extended_pair (val1 : Integer; val2 : Integer; val3 : Integer) :
+    Integer; cdecl; external libNCurses;
+  procedure reset_color_pairs; cdecl; external libNCurses;
+
+  { This is an extension to the curses library. It permits an application to
+    determine if a string is currently bound to any keycode. }
+  function key_defined (const definition : PChar) : Integer; cdecl;
+    external libNCurses;
+
+  { This is an extension to the curses library. It permits an application to
+    disable specific keycodes, rather than use the keypad function to disable
+    all keycodes. Keys that have been disabled can be reenabled. }
+  function keyok (keycode : Integer; enable : Boolean) : Integer; cdecl;
+    external libNCurses;
+
+  { This is an extension to the curses library. It provides callers with a hook
+    into the ncurses data to resize windows, primarily for use by programs
+    running in an X Window terminal (e.g., xterm). The function resizeterm
+    resizes the standard and current windows to the specified dimensions, and
+    adjusts other bookkeeping data used by the ncurses library that record the
+    window dimensions.
+
+    Most of the work is done by the inner function resize_term. The outer
+    function resizeterm adds bookkeeping for the SIGWINCH handler. When resizing
+    the windows, resize_term blank-fills the areas that are extended. The
+    calling application should fill in these areas with appropriate data. The
+    resize_term function attempts to resize all windows. However, due to the
+    calling convention of pads, it is not possible to resize these without
+    additional interaction with the application.
+
+    A support function is_term_resized is provided so that applications can
+    check if the resize_term function would modify the window structures. It
+    returns TRUE if the windows would be modified, and FALSE otherwise. }
+  function is_term_resized (lines : Integer; columns : Integer) : Boolean;
+    cdecl; external libNCurses;
+  function resize_term (lines : Integer; columns : Integer) : Integer; cdecl;
+    external libNCurses;
+  function resizeterm (lines : Integer; columns : Integer) : Integer; cdecl;
+    external libNCurses;
+
+  { This implementation can be configured to provide rudimentary support for
+    multi-threaded applications. This makes a different set of libraries, e.g.,
+    libncursest since the binary interfaces are different.
+
+    Rather than modify the interfaces to pass a thread specifier to each
+    function, it adds a few functions which can be used in any configuration
+    which hide the mutex's needed to prevent concurrent use of the global
+    variables when configured for threading.
+
+    In addition to forcing access to members of the WINDOW structure to be via
+    functions (see curs_opaque(3x)), it makes functions of the common global
+    variables, e.g., COLORS, COLOR_PAIRS, COLS, ESCDELAY, LINES, TABSIZE curscr,
+    newscr and ttytype. Those variables are maintained as read-only values,
+    stored in the SCREEN structure.
+
+    Even this is not enough to make a thread-safe application using curses. A
+    multi-threaded application would be expected to have threads updating
+    separate windows (within the same device), or updating on separate screens
+    (on different devices). Also, a few of the global variables are considered
+    writable by some applications. The functions described here address these
+    special situations.
+
+    The ESCDELAY and TABSIZE global variables are modified by some applications.
+    To modify them in any configuration, use the set_escdelay or set_tabsize
+    functions. Other global variables are not modifiable.
+
+    The use_window and use_screen functions provide coarse granularity mutexes
+    for their respective WINDOW and SCREEN parameters, and call a user-supplied
+    function, passing it a data parameter, and returning the value from the
+    user-supplied function to the application. }
+  function set_escdelay (size : Integer) : Integer; cdecl; external libNCurses;
+  function set_tabsize (size : Integer) : Integer; cdecl; external libNCurses;
+  function use_screen (scr : PSCREEN; func : NCURSES_WINDOW_CB; data : Pointer)
+    : Integer; cdecl; external libNCurses;
+  function use_window (win : PWINDOW; func : NCURSES_SCREEN_CB; data : Pointer)
+    : Integer; cdecl; external libNCurses;
+
+
 
 implementation
 
