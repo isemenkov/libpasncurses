@@ -175,6 +175,8 @@ type
   { Curses uses a helper function.  Define our type for this to simplify
     extending it for the sp-funcs feature. }
   NCURSES_OUTC = function (putc : Integer) : Integer of object;
+  NCURSES_SP_OUTC = function (src : PSCREEN; val : Integer) : Integer of
+    object;
   NCURSES_WINDOW_CB = function (win : PWINDOW; ptr : Pointer) : Integer of
     object;
   NCURSES_SCREEN_CB = function (scr : PSCREEN; ptr : Pointer) : Integer of
@@ -1523,7 +1525,7 @@ type
     The vwprintw and wv_printw routines are analogous to vprintf [see printf]
     and perform a wprintw using a variable argument list. The third argument is
     a va_list, a pointer to a list of arguments, as defined in <stdarg.h>. }
-  function printw (const fmt : PChar; ...) : Integer; cdecl;
+  function printw (const fmt : PChar) : Integer; cdecl; varargs;
     external libNCurses;
   function wprintw (win : PWINDOW; const ftm : PChar) : Integer; cdecl; varargs;
     external libNCurses;
@@ -1973,6 +1975,107 @@ type
     : Integer; cdecl; external libNCurses;
   function use_window (win : PWINDOW; func : NCURSES_SCREEN_CB; data : Pointer)
     : Integer; cdecl; external libNCurses;
+
+  { The use_legacy_coding() function is an extension to the curses library. It
+    allows the caller to change the result of unctrl, and suppress related
+    checks within the library that would normally cause nonprinting characters
+    to be rendered in visible form. This affects only 8-bit characters.
+
+    The level parameter controls the result:
+        0 - the library functions normally, rendering nonprinting characters as
+            described in unctrl.
+        1 - the library ignores isprintf for codes in the range 160-255.
+        2 - the library ignores isprintf for codes in the range 128-255. It also
+            modifies the output of unctrl, showing codes in the range 128-159 as
+            is. }
+  function use_legacy_coding (level : Integer) : Integer; cdecl;
+    external libNCurses;
+
+  { The wresize function reallocates storage for an ncurses window to adjust its
+    dimensions to the specified values. If either dimension is larger than the
+    current values, the window's data is filled with blanks that have the
+    current background rendition (as set by wbkgndset) merged into them. }
+  function wresize (win : PWINDOW; lines : Integer; columns : Integer) :
+    Integer; cdecl; external libNCurses;
+
+  { This implementation provides functions which return properties set in the
+    WINDOW structure, allowing it to be ''opaque'' if the symbol NCURSES_OPAQUE
+    is defined:
+
+       is_cleared
+            returns the value set in clearok
+       is_idcok
+            returns the value set in idcok
+       is_idlok
+            returns the value set in idlok
+       is_immedok
+            returns the value set in immedok
+       is_keypad
+            returns the value set in keypad
+       is_leaveok
+            returns the value set in leaveok
+       is_nodelay
+            returns the value set in nodelay
+       is_notimeout
+            returns the value set in notimeout
+       is_scrollok
+            returns the value set in scrollok
+       is_syncok
+            returns the value set in syncok
+       wgetparent
+            returns the parent WINDOW pointer for subwindows, or NULL for
+            windows having no parent.
+       wgetscrreg
+            returns the top and bottom rows for the scrolling margin as set in
+            wsetscrreg. }
+  function is_cleared (const win : PWINDOW) : Boolean; cdecl;
+    external libNCurses;
+  function is_idcok (const win : PWINDOW) : Boolean; cdecl; external libNCurses;
+  function is_idlok (const win : PWINDOW) : Boolean; cdecl; external libNCurses;
+  function is_immedok (const win : PWINDOW) : Boolean; cdecl;
+    external libNCurses;
+  function is_keypad (const win : PWINDOW) : Boolean; cdecl;
+    external libNCurses;
+  function is_leaveok (const win : PWINDOW) : Boolean; cdecl;
+    external libNCurses;
+  function is_nodelay (const win : PWINDOW) : Boolean; cdecl;
+    external libNCurses;
+  function is_notimeout (const win : PWINDOW) : Boolean; cdecl;
+    external libNCurses;
+  function is_scrollok (const win : PWINDOW) : Boolean; cdecl;
+    external libNCurses;
+  function is_syncok (const win : PWINDOW) : Boolean; cdecl;
+    external libNCurses;
+  function wgetparent (const win : PWINDOW) : PWINDOW; cdecl;
+    external libNCurses;
+  function wgetscrreg (const win : PWINDOW; top : PInteger; bottom : PInteger) :
+    Integer; cdecl; external libNCurses;
+  function is_pad (const win : PWINDOW) : Boolean; cdecl; external libNCurses;
+  function is_subwin (const win : PWINDOW) : Boolean; cdecl;
+    external libNCurses;
+  function wgetdelay (const win : PWINDOW) : Integer; cdecl;
+    external libNCurses;
+
+  { Extra extension-functions, which pass a SCREEN pointer rather than using
+    a global variable SP. }
+  function new_prescr : PSCREEN; cdecl; external libNCurses;
+  function baudrate_sp (src : PSCREEN) : Integer; cdecl; external libNCurses;
+  function beep_sp (src : PSCREEN) : Integer; cdecl; external libNCurses;
+  function can_change_color_sp (src : PSCREEN) : Boolean; cdecl;
+    external libNCurses;
+  function cbreak_sp (src : PSCREEN) : Integer; cdecl; external libNCurses;
+  function curs_set_sp (src : PSCREEN; val : Integer) : Integer; cdecl;
+    external libNCurses;
+  function color_content_sp (src : PSCREEN; val : NCURSES_PAIRS_T; col1 :
+    NCURSES_COLOR_T; col2 : NCURSES_COLOR_T; col3 : NCURSES_COLOR_T) : Integer;
+    cdecl; external libNCurses;
+  function def_prog_mode_sp (src : PSCREEN) : Integer; cdecl;
+    external libNCurses;
+  function def_shell_mode_sp (src : PSCREEN) : Integer; cdecl;
+    external libNCurses;
+  function delay_output_sp (src : PSCREEN; val : Integer) : Integer; cdecl;
+    external libNCurses;
+  function doupdate (src : PSCREEN) : Integer; cdecl; external libNCurses;
 
 
 
