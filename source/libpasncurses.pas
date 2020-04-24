@@ -415,13 +415,19 @@ type
 
     The termname routine returns the terminal name used by setupterm. }
   function baudrate : Integer; cdecl; external libNCurses;
+  function baudrate_sp (src : PSCREEN) : Integer; cdecl; external libNCurses;
   function erasechar : Char; cdecl; external libNCurses;
+  function erasechar_sp (src : PSCREEN) : Char; cdecl; external libNCurses;
   function erasewchar (ch : PWideChar) : Integer; cdecl; external libNCurses;
   function has_ic : Boolean; cdecl; external libNCurses;
+  function has_ic_sp (src : PSCREEN) : Boolean; cdecl; external libNCurses;
   function has_il : Boolean; cdecl; external libNCurses;
+  function has_il_sp (src : PSCREEN) : Boolean; cdecl; external libNCurses;
   function killchar : Char; cdecl; external libNCurses;
+  function killchar_sp (src : PSCREEN) : Char; cdecl; external libNCurses;
   function killwchar (ch : PWideChar) : Integer; cdecl; external libNCurses;
   function longname : PChar; cdecl; external libNCurses;
+  function longname_sp (src : PSCREEN) : PChar; cdecl; external libNCurses;
   function term_attrs : attr_t; cdecl; external libNCurses;
   function termattrs : chtype; cdecl; external libNCurses;
   function termname : PChar; cdecl; external libNCurses;
@@ -433,7 +439,9 @@ type
     nothing happens. Nearly all terminals have an audible alert (bell or beep),
     but only some can flash the screen. }
   function beep : Integer; cdecl; external libNCurses;
+  function beep_sp (src : PSCREEN) : Integer; cdecl; external libNCurses;
   function flash : Integer; cdecl; external libNCurses;
+  function flash_sp (src : PSCREEN) : Integer; cdecl; external libNCurses;
 
   { The bkgdset and wbkgdset routines manipulate the background of the named
     window. The window background is a chtype consisting of any combination of
@@ -626,14 +634,26 @@ type
          COLOR_CYAN
          COLOR_WHITE }
   function start_color : Integer; cdecl; external libNCurses;
-  function init_pair (pair : Shortint; f : Shortint; b : Shortint) : Integer;
-    cdecl; external libNCurses;
-  function init_color (color : Shortint; r : Shortint; g : Shortint;
+  function init_pair (pair : NCURSES_PAIRS_T; f : Shortint; b : Shortint) :
+    Integer; cdecl; external libNCurses;
+  function init_pair_sp (src : PSCREEN; pair : NCURSES_PAIRS_T; f :
+    NCURSES_COLOR_T; b : NCURSES_COLOR_T) : Integer; cdecl;
+    external libNCurses;
+  function init_color (color : NCURSES_COLOR_T; r : Shortint; g : Shortint;
     b : Shortint) : Integer; cdecl; external libNCurses;
+  function init_color_sp (src : PSCREEN; color : NCURSES_COLOR_T;
+    r : NCURSES_COLOR_T; g : NCURSES_COLOR_T; b : NCURSES_COLOR_T) :
+    Integer; cdecl; external libNCurses;
   function has_colors : Boolean; cdecl; external libNCurses;
+  function has_colors_sp (src : PSCREEN) : Boolean; cdecl; external libNCurses;
   function can_change_color : Boolean; cdecl; external libNCurses;
-  function color_content (color : Shortint; r : PShortint; g : PShortint;
+  function can_change_color_sp (src : PSCREEN) : Boolean; cdecl;
+    external libNCurses;
+  function color_content (color : NCURSES_PAIRS_T; r : PShortint; g : PShortint;
     b : PShortint) : Integer; cdecl; external libNCurses;
+  function color_content_sp (src : PSCREEN; color : NCURSES_PAIRS_T; r :
+    NCURSES_COLOR_T; g : NCURSES_COLOR_T; b : NCURSES_COLOR_T) : Integer;
+    cdecl; external libNCurses;
   function pair_content (pair : Shortint; f : PShortint; b : PShortint) :
     Integer; cdecl; external libNCurses;
 
@@ -734,12 +754,20 @@ type
     check for typeahead instead. If fd is -1, then no typeahead checking is
     done. }
   function cbreak : Integer; cdecl; external libNCurses;
+  function cbreak_sp (src : PSCREEN) : Integer; cdecl; external libNCurses;
   function nocbreak : Integer; cdecl; external libNCurses;
+  function nocbreak_sp (src : PSCREEN) : Integer; cdecl; external libNCurses;
   function echo : Integer; cdecl; external libNCurses;
+  function echo_sp (src : PSCREEN) : Integer; cdecl; external libNCurses;
   function noecho : Integer; cdecl; external libNCurses;
+  function noecho_sp (src : PSCREEN) : Integer; cdecl; external libNCurses;
   function halfdelay (tenths : Integer) : Integer; cdecl; external libNCurses;
+  function halfdelay_sp (src : PSCREEN; tenths : Integer) : Integer; cdecl;
+    external libNCurses;
   function intrflush (win : PWINDOW; bf : Boolean) : Integer; cdecl;
     external libNCurses;
+  function intrflush_sp (src : PSCREEN; win : PWINDOW; bf : Boolean) : Integer;
+    cdecl; external libNCurses;
   function keypad (win : PWINDOW; bf : Boolean) : Integer; cdecl;
     external libNCurses;
   function meta (win : PWINDOW; bf : Boolean) : Integer; cdecl;
@@ -860,6 +888,7 @@ type
   function scrollok (win : PWINDOW; bf : Boolean) : Integer; cdecl;
     external libNCurses;
   function nl : Integer; cdecl; external libNCurses;
+  function nl_sp (src : PSCREEN) : Integer; cdecl; external libNCurses;
   function nonl : Integer; cdecl; external libNCurses;
 
   { The overlay and overwrite routines overlay srcwin on top of dstwin. scrwin
@@ -934,7 +963,11 @@ type
 
     The napms routine is used to sleep for ms milliseconds. }
   function def_prog_mode : Integer; cdecl; external libNCurses;
+  function def_prog_mode_sp (src : PSCREEN) : Integer; cdecl;
+    external libNCurses;
   function def_shell_mode : Integer; cdecl; external libNCurses;
+  function def_shell_mode_sp (src : PSCREEN) : Integer; cdecl;
+    external libNCurses;
   function reset_prog_mode : Integer; cdecl; external libNCurses;
   function reset_shell_mode : Integer; cdecl; external libNCurses;
   function resetty : Integer; cdecl; external libNCurses;
@@ -945,7 +978,11 @@ type
     Integer; cdecl; external libNCurses;
   function curs_set (visibility : Integer) : Integer; cdecl;
     external libNCurses;
+  function curs_set_sp (src : PSCREEN; visibility : Integer) : Integer; cdecl;
+    external libNCurses;
   function napms (ms : Integer) : Integer; cdecl; external libNCurses;
+  function napms_sp (src : PSCREEN; ms : Integer) : Integer; cdecl;
+    external libNCurses;
 
   { The unctrl routine returns a character string which is a printable
     representation of the character c, ignoring attributes. Control characters
@@ -1011,15 +1048,23 @@ type
   function unctrl (c : chtype) : PChar; cdecl; external libNCurses;
   //function wunctrl (c : pcchar_t) : PWideChar; cdecl; external libNCurses;
   function keyname (c : Integer) : PChar; cdecl; external libNCurses;
+  function keyname_sp (src : PSCREEN; c : Integer) : PChar; cdecl;
+    external libNCurses;
   function key_name (w : WideChar) : PChar; cdecl; external libNCurses;
   procedure filter; cdecl; external libNCurses;
+  procedure filter_sp (src : PSCREEN); cdecl; external libNCurses;
   procedure nofilter; cdecl; external libNCurses;
   procedure use_env (f : Boolean); cdecl; external libNCurses;
   function putwin (win : PWINDOW; filep : Pointer) : Integer; cdecl;
     external libNCurses;
   function getwin (filep : Pointer) : PWINDOW; cdecl; external libNCurses;
+  function getwin_sp (src : PSCREEN; filep : Pointer) : PWINDOW; cdecl;
+    external libNCurses;
   function delay_output (ms : Integer) : Integer; cdecl; external libNCurses;
+  function delay_output_sp (src : PSCREEN; ms : Integer) : Integer; cdecl;
+    external libNCurses;
   function flushinp : Integer; cdecl; external libNCurses;
+  function flushinp_sp (src : PSCREEN) : Integer; cdecl; external libNCurses;
   procedure use_tioctl (val : Boolean); cdecl; external libNCurses;
 
   { These routines delete the character under the cursor; all characters to the
@@ -1035,6 +1080,8 @@ type
     external libNCurses;
   function mvcur (oldrow : Integer; oldcol : Integer; newrow : Integer;
     newcol : Integer) : Integer; cdecl; external libNCurses;
+  function mvcur_sp (src : PSCREEN; oldrow : Integer; oldcol : Integer; newrow :
+    Integer; newcol : Integer) : Integer; cdecl; external libNCurses;
 
   { initscr is normally the first curses routine to call when initializing a
     program. A few special routines sometimes need to be called before it; these
@@ -1079,9 +1126,13 @@ type
     called after endwin if a particular SCREEN is no longer needed. }
   function initscr : PWINDOW; cdecl; external libNCurses;
   function endwin : Integer; cdecl; external libNCurses;
+  function endwin_sp (src : PSCREEN) : Integer; cdecl; external libNCurses;
   function isendwin : Boolean; cdecl; external libNCurses;
+  function isendwin_sp (src : PSCREEN) : Boolean; cdecl; external libNCurses;
   function newterm (_type : PChar; outfd : Pointer; infd : Pointer) : PSCREEN;
     cdecl; external libNCurses;
+   function newterm_sp (src : PSCREEN; const _type : PChar; outfd : Pointer;
+    infd : Pointer) : PSCREEN; cdecl; external libNCurses;
   function set_term (new : PSCREEN) : PSCREEN; cdecl; external libNCurses;
   procedure delscreen (sp : PSCREEN); cdecl; external libNCurses;
 
@@ -1134,6 +1185,8 @@ type
     window. }
   function newwin (nlines : Integer; ncols : Integer; begin_y : Integer;
     begin_x : Intger) : PWINDOW; cdecl; external libNCurses;
+  function newwin_sp (src : PSCREEN; nlines : Integer; ncols : Integer;
+    begin_y : Integer; begin_x : Integer) : PWINDOW; cdecl; external libNCurses;
   function delwin (win : PWINDOW) : Integer; cdecl; external libNCurses;
   function mvwin (win : PWINDOW; y : Integer; x : Integer) : Integer; cdecl;
     external libNCurses;
@@ -1212,6 +1265,7 @@ type
   function wrefresh (win : PWINDOW) : Integer; cdecl; external libNCurses;
   function wnoutrefresh (win : PWINDOW) : Integer; cdecl; external libNCurses;
   function doupdate : Integer; cdecl; external libNCurses;
+  function doupdate_sp (src : PSCREEN) : Integer; cdecl; external libNCurses;
   function redrawwin (win : PWINDOW) : Integer; cdecl; external libNCurses;
   function wredrawln (win : PWINDOW; beg_line : Integer; num_lines : Integer) :
     Integer; cdecl; external libNCurses;
@@ -1604,6 +1658,8 @@ type
     this by a call to wadd_wch followed by a call to prefresh. }
   function newpad (nlines : Integer; ncols : Integer) : PWINDOW; cdecl;
     external libNCurses;
+  function newpad_sp (src : PSCREEN; nlines : Integer; ncols : Integer) :
+    PWINDOW; cdecl; external libNCurses;
   function subpad (orig : PWINDOW; nlines : Integer; ncols : Integer; begin_y :
     Integer; begin_x : Integer) : PWINDOW; cdecl; external libNCurses;
   function prefresh (pad : PWINDOW; pminrow : Integer; pmincol : Integer;
@@ -2059,25 +2115,6 @@ type
   { Extra extension-functions, which pass a SCREEN pointer rather than using
     a global variable SP. }
   function new_prescr : PSCREEN; cdecl; external libNCurses;
-  function baudrate_sp (src : PSCREEN) : Integer; cdecl; external libNCurses;
-  function beep_sp (src : PSCREEN) : Integer; cdecl; external libNCurses;
-  function can_change_color_sp (src : PSCREEN) : Boolean; cdecl;
-    external libNCurses;
-  function cbreak_sp (src : PSCREEN) : Integer; cdecl; external libNCurses;
-  function curs_set_sp (src : PSCREEN; val : Integer) : Integer; cdecl;
-    external libNCurses;
-  function color_content_sp (src : PSCREEN; val : NCURSES_PAIRS_T; col1 :
-    NCURSES_COLOR_T; col2 : NCURSES_COLOR_T; col3 : NCURSES_COLOR_T) : Integer;
-    cdecl; external libNCurses;
-  function def_prog_mode_sp (src : PSCREEN) : Integer; cdecl;
-    external libNCurses;
-  function def_shell_mode_sp (src : PSCREEN) : Integer; cdecl;
-    external libNCurses;
-  function delay_output_sp (src : PSCREEN; val : Integer) : Integer; cdecl;
-    external libNCurses;
-  function doupdate (src : PSCREEN) : Integer; cdecl; external libNCurses;
-
-
 
 implementation
 
