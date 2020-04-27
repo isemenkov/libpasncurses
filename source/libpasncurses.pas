@@ -141,7 +141,100 @@ const
   KEY_PPAGE         { previous-page key }                               = &0523;
   KEY_STAB          { set-tab key }                                     = &0524;
   KEY_CTAB          { clear-tab key }                                   = &0525;
+  KEY_CATAB         { clear-all-tabs key }                              = &0526;
+  KEY_ENTER         { enter/send key }                                  = &0527;
+  KEY_PRINT         { print key }                                       = &0532;
+  KEY_LL            { lower-left key (home down) }                      = &0533;
+  KEY_A1            { upper left of keypad }                            = &0534;
+  KEY_A3            { upper right of keypad }                           = &0535;
+  KEY_B2            { center of keypad }                                = &0536;
+  KEY_C1            { lower left of keypad }                            = &0537;
+  KEY_C3            { lower right of keypad }                           = &0540;
+  KEY_BTAB          { back-tab key }                                    = &0541;
+  KEY_BEG           { begin key }                                       = &0542;
+  KEY_CANCEL        { cancel key }                                      = &0543;
+  KEY_CLOSE         { close key }                                       = &0544;
+  KEY_COMMAND       { command key }                                     = &0545;
+  KEY_COPY          { copy key }                                        = &0546;
+  KEY_CREATE        { create key }                                      = &0547;
+  KEY_END           { end key }                                         = &0550;
+  KEY_EXIT          { exit key }                                        = &0551;
+  KEY_FIND          { find key }                                        = &0552;
+  KEY_HELP          { help key }                                        = &0553;
+  KEY_MARK          { mark key }                                        = &0554;
+  KEY_MESSAGE       { message key }                                     = &0555;
+  KEY_MOVE          { move key }                                        = &0556;
+  KEY_NEXT          { next key }                                        = &0557;
+  KEY_OPEN          { open key }                                        = &0560;
+  KEY_OPTIONS       { options key }                                     = &0561;
+  KEY_PREVIOUS      { previous key }                                    = &0562;
+  KEY_REDO          { redo key }                                        = &0563;
+  KEY_REFERENCE     { reference key }                                   = &0564;
+  KEY_REFRESH       { refresh key }                                     = &0565;
+  KEY_REPLACE       { replace key }                                     = &0566;
+  KEY_RESTART       { restart key }                                     = &0567;
+  KEY_RESUME        { resume key }                                      = &0570;
+  KEY_SAVE          { save key }                                        = &0571;
+  KEY_SBEG          { shifted begin key }                               = &0572;
+  KEY_SCANCEL       { shifted cancel key }                              = &0573;
+  KEY_SCOMMAND      { shifted command key }                             = &0574;
+  KEY_SCOPY         { shifted copy key }                                = &0575;
+  KEY_SCREATE       { shifted create key }                              = &0576;
+  KEY_SDC           { shifted delete-character key }                    = &0577;
+  KEY_SDL           { shifted delete-line key }                         = &0600;
+  KEY_SELECT        { select key }                                      = &0601;
+  KEY_SEND          { shifted end key }                                 = &0602;
+  KEY_SEOL          { shifted clear-to-end-of-line key }                = &0603;
+  KEY_SEXIT         { shifted exit key }                                = &0604;
+  KEY_SFIND         { shifted find key }                                = &0605;
+  KEY_SHELP         { shifted help key }                                = &0606;
+  KEY_SHOME         { shifted home key }                                = &0607;
+  KEY_SIC           { shifted insert-character key }                    = &0610;
+  KEY_SLEFT         { shifted left-arrow key }                          = &0611;
+  KEY_SMESSAGE      { shifted message key }                             = &0612;
+  KEY_SMOVE         { shifted move key }                                = &0613;
+  KEY_SNEXT         { shifted next key }                                = &0614;
+  KEY_SOPTIONS      { shifted options key }                             = &0615;
+  KEY_SPREVIOUS     { shifted previous key }                            = &0616;
+  KEY_SPRINT        { shifted print key }                               = &0617;
+  KEY_SREDO         { shifted redo key }                                = &0620;
+  KEY_SREPLACE      { shifted replace key }                             = &0621;
+  KEY_SRIGHT        { shifted right-arrow key }                         = &0622;
+  KEY_SRSUME        { shifted resume key }                              = &0623;
+  KEY_SSAVE         { shifted save key }                                = &0624;
+  KEY_SSUSPEND      { shifted suspend key }                             = &0625;
+  KEY_SUNDO         { shifted undo key }                                = &0626;
+  KEY_SUSPEND       { suspend key }                                     = &0627;
+  KEY_UNDO          { undo key }                                        = &0630;
+  KEY_MOUSE         { Mouse event has occurred }                        = &0631;
+  KEY_RESIZE        { Terminal resize event }                           = &0632;
+  KEY_EVENT         { We were interrupted by an event }                 = &0633;
 
+  KEY_MAX           { Maximum key value is 0633 }                       = &0777;
+
+  NCURSES_BUTTON_RELEASED                                               = 001;
+  NCURSES_BUTTON_PRESSED                                                = 002;
+  NCURSES_BUTTON_CLICKED                                                = 004;
+  NCURSES_DOUBLE_CLICKED                                                = 010;
+  NCURSES_TRIPLE_CLICKED                                                = 020;
+  NCURSES_RESERVED_EVENT                                                = 040;
+
+  { trace masks }
+  TRACE_DISABLE     { turn off tracing }                                = $0000;
+  TRACE_TIMES       { trace user and system times of updates }          = $0001;
+  TRACE_TPUTS       { trace tputs calls }                               = $0002;
+  TRACE_UPDATE      { trace update actions, old & new screens }         = $0004;
+  TRACE_MOVE        { trace cursor moves and scrolls }                  = $0008;
+  TRACE_CHARPUT     { trace all character outputs }                     = $0010;
+  TRACE_ORDINARY    { trace all update actions }                        = $001F;
+  TRACE_CALLS       { trace all curses calls }                          = $0020;
+  TRACE_VIRTPUT     { trace virtual character puts }                    = $0040;
+  TRACE_IEVENT      { trace low-level input processing }                = $0080;
+  TRACE_BITS        { trace state of TTY control bits }                 = $0100;
+  TRACE_ICALLS      { trace internal/nested calls }                     = $0200;
+  TRACE_CCALLS      { trace per-character calls }                       = $0400;
+  TRACE_DATABASE    { trace read/write of terminfo/termcap data }       = $0800;
+  TRACE_ATTRS       { trace attribute updates }                         = $1000;
 
 type
   NCURSES_ATTR_T = type Integer;
@@ -167,6 +260,7 @@ type
 
   pchtype = ^chtype;
   chtype = type Cardinal;
+  pmmask_t = ^mmask_t;
   mmask_t = type Cardinal;
 
   { ...must be at least as wide as chtype }
@@ -246,6 +340,13 @@ type
   end;
 
   WINDOW = _win_st;
+
+  PMEVENT = ^MEVENT;
+  MEVENT = record
+    id : Shortint;       { ID to distinguish multiple devices }
+    x, y, z : Integer;   { event coordinates (character-cell) }
+    bstate : mmask_t;    { button state bits }
+  end;
 
   { Curses uses a helper function.  Define our type for this to simplify
     extending it for the sp-funcs feature. }
@@ -1414,6 +1515,8 @@ type
   function ungetch_sp (src : PSCREEN; ch : Integer) : Integer; cdecl;
     external libNCurses;
   function has_key (ch : Integer) : Integer; cdecl; external libNCurses;
+  function has_key_sp (src : PSCREEN; ch : Integer) : Integer; cdecl;
+    external libNCurses;
 
   { The function getstr is equivalent to a series of calls to getch, until a
     newline or carriage return is received (the terminating character is not
@@ -2296,6 +2399,194 @@ type
   { Extra extension-functions, which pass a SCREEN pointer rather than using
     a global variable SP. }
   function new_prescr : PSCREEN; cdecl; external libNCurses;
+
+  { These functions provide an interface to mouse events from ncurses. Mouse
+    events are represented by KEY_MOUSE pseudo-key values in the wgetch input
+    stream.
+
+    To make mouse events visible, use the mousemask function. This will set the
+    mouse events to be reported. By default, no mouse events are reported. The
+    function will return a mask to indicate which of the specified mouse events
+    can be reported; on complete failure it returns 0. If oldmask is non-NULL,
+    this function fills the indicated location with the previous value of the
+    given window's mouse event mask.
+
+    As a side effect, setting a zero mousemask may turn off the mouse pointer;
+    setting a nonzero mask may turn it on. Whether this happens is
+    device-dependent.
+
+    Here are the mouse event type masks which may be defined:
+
+         Once a class of mouse events have been made visible in a window,
+         calling the wgetch function on that window may return KEY_MOUSE as an
+         indicator that a mouse event has been queued. To read the event data
+         and pop the event off the queue, call getmouse. This function will
+         return OK if a mouse event is actually visible in the given window, ERR
+         otherwise. When getmouse returns OK, the data deposited as y and x in
+         the event structure coordinates will be screen-relative character-cell
+         coordinates. The returned state mask will have exactly one bit set to
+         indicate the event type.
+
+         The ungetmouse function behaves analogously to ungetch. It pushes a
+         KEY_MOUSE event onto the input queue, and associates with that event
+         the given state data and screen-relative character-cell coordinates.
+
+         The wenclose function tests whether a given pair of screen-relative
+         character-cell coordinates is enclosed by a given window, returning
+         TRUE if it is and FALSE otherwise. It is useful for determining what
+         subset of the screen windows enclose the location of a mouse event.
+
+         The wmouse_trafo function transforms a given pair of coordinates from
+         stdscr-relative coordinates to coordinates relative to the given window
+         or vice versa. Please remember, that stdscr-relative coordinates are
+         not always identical to window-relative coordinates due to the
+         mechanism to reserve lines on top or bottom of the screen for other
+         purposes (see the ripoffline() and slk_init calls, for example). If the
+         parameter to_screen is TRUE, the pointers pY, pX must reference the
+         coordinates of a location inside the window win. They are converted to
+         window-relative coordinates and returned through the pointers. If the
+         conversion was successful, the function returns TRUE. If one of the
+         parameters was NULL or the location is not inside the window, FALSE is
+         returned. If to_screen is FALSE, the pointers pY, pX must reference
+         window-relative coordinates. They are converted to stdscr-relative
+         coordinates if the window win encloses this point. In this case the
+         function returns TRUE. If one of the parameters is NULL or the point is
+         not inside the window, FALSE is returned. Please notice, that the
+         referenced coordinates are only replaced by the converted coordinates
+         if the transformation was successful.
+
+         The mouse_trafo function performs the same translation as wmouse_trafo,
+         using stdscr for win.
+
+         The mouseinterval function sets the maximum time (in thousands of a
+         second) that can elapse between press and release events for them to be
+         recognized as a click. Use mouseinterval(0) to disable click
+         resolution. This function returns the previous interval value. Use
+         mouseinterval(-1) to obtain the interval without altering it. The
+         default is one sixth of a second.
+
+         The has_mouse function returns TRUE if the mouse driver has been
+         successfully initialized.
+
+         Note that mouse events will be ignored when input is in cooked mode,
+         and will cause an error beep when cooked mode is being simulated in a
+         window by a function such as getstr that expects a linefeed for
+         input-loop termination.
+
+    mousemask returns the mask of reportable events.
+
+    mouseinterval returns the previous interval value, unless the terminal was
+    not initialized. In that case, it returns the maximum interval value (166).
+
+    wenclose and wmouse_trafo are boolean functions returning TRUE or FALSE
+    depending on their test result. }
+  function has_mouse : Boolean; cdecl; external libNCurses;
+  function has_mouse_sp (src : PSCREEN) : Boolean; cdecl; external libNCurses;
+  function getmouse (event : PMEVENT) : Integer; cdecl; external libNCurses;
+  function getmouse_sp (src : PSCREEN; event : PMEVENT) : Integer; cdecl;
+    external libNCurses;
+  function ungetmouse (event : PMEVENT) : Integer; cdecl; external libNCurses;
+  function ungetmouse_sp (src : PSCREEN; event : PMEVENT) : Integer; cdecl;
+    external libNCurses;
+  function mousemask (newmask : mmask_t; oldmask : pmmask_t) : mmask_t; cdecl;
+    external libNCurses;
+  function mousemask_sp (src : PSCREEN; newmask : mmask_t; oldmask : pmmask_t) :
+    mmask_t; cdecl; external libNCurses;
+  function wenclose (const win : PWINDOW; y : Integer; x : Integer) : Boolean;
+    cdecl; external libNCurses;
+  function mouse_trafo (pY : PInteger; pX : PInteger; to_screen : Boolean) :
+    Boolean; cdecl; external libNCurses;
+  function wmouse_trafo (const win : PWINDOW; pY : PInteger; pX : PInteger;
+    to_screen : Boolean) : Boolean; cdecl; external libNCurses;
+  function mouseinterval (erval : Integer) : Integer; cdecl;
+    external libNCurses;
+  function mouseinterval_sp (src : PSCREEN; erval : Integer) : Integer; cdecl;
+    external libNCurses;
+
+  { This function uses the mc5p or mc4 and mc5 capabilities, if they are
+    present, to ship given data to a printer attached to the terminal.
+
+    Note that the mcprint code has no way to do flow control with the printer or
+    to know how much buffering it has. Your application is responsible for
+    keeping the rate of writes to the printer below its continuous throughput
+    rate (typically about half of its nominal cps rating). Dot-matrix printers
+    and 6-page-per-minute lasers can typically handle 80cps, so a good
+    conservative rule of thumb is to sleep for a second after shipping each
+    80-character line. }
+  function mcprint (data : PChar; len : Integer) : Integer; cdecl;
+    external libNCurses;
+  function mcprint_sp (src : PSCREEN; data : PChar; len : Integer) : Integer;
+    cdecl; external libNCurses;
+
+  { The trace routines are used for debugging the ncurses libraries, as well as
+    applications which use the ncurses libraries. These functions are normally
+    available only with the debugging library libncurses_g.a, but may be
+    compiled into any model (shared, static, profile) by defining the symbol
+    TRACE.
+
+    The principal parts of this interface are the trace routine which
+    selectively enables different tracing features, and the _tracef routine
+    which writes formatted data to the trace file.
+
+    Calling trace with a nonzero parameter opens the file trace in the current
+    directory for output. The parameter is formed by OR'ing values from the list
+    of TRACE_xxx definitions in <curses.h>. These include:
+
+       TRACE_DISABLE
+          turn off tracing.
+      TRACE_TIMES
+          trace user and system times of updates.
+      TRACE_TPUTS
+          trace tputs calls.
+      TRACE_UPDATE
+          trace update actions, old & new screens.
+      TRACE_MOVE
+          trace cursor movement and scrolling.
+      TRACE_CHARPUT
+          trace all character outputs.
+      TRACE_ORDINARY
+          trace all update actions. The old and new screen contents are written
+          to the trace file for each refresh.
+      TRACE_CALLS
+          trace all curses calls. The parameters for each call are traced, as
+          well as return values.
+      TRACE_VIRTPUT
+          trace virtual character puts, i.e., calls to addch.
+      TRACE_IEVENT
+          trace low-level input processing, including timeouts.
+      TRACE_BITS
+          trace state of TTY control bits.
+      TRACE_ICALLS
+          trace internal/nested calls.
+      TRACE_CCALLS
+          trace per-character calls.
+      TRACE_DATABASE
+          trace read/write of terminfo/termcap data.
+      TRACE_ATTRS
+          trace changes to video attributes and colors.
+      TRACE_MAXIMUM
+          maximum trace level, enables all of the separate trace features.
+
+    Some tracing features are enabled whenever the trace parameter is nonzero.
+    Some features overlap. The specific names are used as a guideline. }
+  procedure _tracef (const format : PChar); varargs; cdecl; external libNCurses;
+  procedure _tracedump (const label_str : PChar; win : PWINDOW); cdecl;
+    external libNCurses;
+  function _traceattr (attr : attr_t) : PChar; cdecl; external libNCurses;
+  function _traceattr2 (buffer : Integer; ch : chtype) : PChar; cdecl;
+    external libNCurses;
+  function _nc_tracebits : PChar; cdecl; external libNCurses;
+  function _tracechar (val : Integer) : PChar; cdecl; external libNCurses;
+  function _tracechtype (ch : chtype) : PChar; cdecl; external libNCurses;
+  function _tracechtype2 (buffer : Integer; ch : chtype) : PChar; cdecl;
+    external libNCurses;
+  function _tracemouse (const event : PMEVENT) : PChar; cdecl;
+    external libNCurses;
+  procedure trace (const param : Cardinal); cdecl; external libNCurses;
+  function curses_trace (const param : Cardinal) : Cardinal; cdecl;
+    external libNCurses;
+
+  procedure exit_curses (val : Integer); cdecl; external libNCurses;
 
 implementation
 
