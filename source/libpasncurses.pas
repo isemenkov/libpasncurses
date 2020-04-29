@@ -362,6 +362,14 @@ type
   ripoffline_init_callback = function (win : PWINDOW; val : Integer) : Integer
     of object;
 
+  PPANEL = ^PANEL;
+  PANEL = record
+    win : PWINDOW;
+    below : PPANEL;
+    above : PPANEL;
+    user : Pointer;
+  end;
+
   {$IFDEF WINDOWS}
     const libNCurses = 'libncurses.dll';
   {$ENDIF}
@@ -2470,6 +2478,106 @@ type
     external libNCurses;
 
   procedure exit_curses (val : Integer); cdecl; external libNCurses;
+
+  { Panels are curses windows with the added feature of depth. Panel functions
+    allow the use of stacked windows and ensure the proper portions of each
+    window and the curses stdscr window are hidden or displayed when panels are
+    added, moved, modified or removed. The set of currently visible panels is
+    the stack of panels. The stdscr window is beneath all panels, and is not
+    considered part of the stack.
+
+    A window is associated with every panel. The panel routines enable you to
+    create, move, hide, and show panels, as well as position a panel at any
+    desired location in the stack.
+
+    Panel routines are a functional layer added to curses, make only high-level
+    curses calls, and work anywhere terminfo curses does.
+
+    new_panel(win)
+        allocates a PANEL structure, associates it with win, places the panel on
+        the top of the stack (causes it to be displayed above any other panel)
+        and returns a pointer to the new panel.
+
+    update_panels()
+        refreshes the virtual screen to reflect the relations between the panels
+        in the stack, but does not call doupdate() to refresh the physical
+        screen. Use this function and not wrefresh or wnoutrefresh.
+        update_panels() may be called more than once before a call to
+        doupdate(), but doupdate() is the function responsible for updating the
+        physical screen.
+
+    del_panel(pan)
+        removes the given panel from the stack and deallocates the PANEL structure
+        (but not its associated window).
+
+    hide_panel(pan)
+        removes the given panel from the panel stack and thus hides it from
+        view. The PANEL structure is not lost, merely removed from the stack.
+
+    panel_hidden(pan)
+        returns TRUE if the panel is in the panel stack, FALSE if it is not. If
+        the panel is a null pointer, return ERR.
+
+    show_panel(pan)
+        makes a hidden panel visible by placing it on top of the panels in the
+        panel stack.
+
+    top_panel(pan)
+        puts the given visible panel on top of all panels in the stack.
+
+    bottom_panel(pan)
+        puts panel at the bottom of all panels.
+
+    move_panel(pan,starty,startx)
+        moves the given panel window so that its upper-left corner is at starty,
+        startx. It does not change the position of the panel in the stack. Be
+        sure to use this function, not mvwin(), to move a panel window.
+
+    replace_panel(pan,window)
+        replaces the current window of panel with window (useful, for example if
+        you want to resize a panel; if you're using ncurses, you can call
+        replace_panel on the output of wresize). It does not change the position
+        of the panel in the stack.
+
+    panel_above(pan)
+        returns a pointer to the panel above pan. If the panel argument is
+        (PANEL *)0, it returns a pointer to the bottom panel in the stack.
+
+    panel_below(pan)
+        returns a pointer to the panel just below pan. If the panel argument is
+        (PANEL *)0, it returns a pointer to the top panel in the stack.
+
+    set_panel_userptr(pan,ptr)
+        sets the panel's user pointer.
+
+    panel_userptr(pan)
+        returns the user pointer for a given panel.
+
+    panel_window(pan)
+        returns a pointer to the window of the given panel. }
+  function new_panel (win : PWINDOW) : PPANEL; cdecl; external libNCurses;
+  function bottom_panel (pan : PPANEL) : Integer; cdecl; external libNCurses;
+  function top_panel (pan : PPANEL) : Integer; cdecl; external libNCurses;
+  function show_panel (pan : PPANEL) : Integer; cdecl; external libNCurses;
+  procedure update_panels; cdecl; external libNCurses;
+  function hide_panel (pan : PPANEL) : Integer; cdecl; external libNCurses;
+  function panel_window (const pan : PPANEL) : PWINDOW; cdecl;
+    external libNCurses;
+  function replace_panel (pan : PPANEL; window : PWINDOW) : Integer; cdecl;
+    external libNCurses;
+  function move_panel (pan : PPANEL; sterty : Integer; startx : Integer) :
+    Integer; cdecl; external libNCurses;
+  function panel_hidden (const pan : PPANEL) : Integer; cdecl;
+    external libNCurses;
+  function panel_above (const pan : PPANEL) : PPANEL; cdecl;
+    external libNCurses;
+  function panel_below (const pan : PPANEL) : PPANEL; cdecl;
+    external libNCurses;
+  function set_panel_userptr (pan : PPANEL; const ptr : Pointer) : Integer;
+    cdecl; external libNCurses;
+  function panel_userptr (const pan : PPANEL) : Pointer; cdecl;
+    external libNCurses;
+  function del_panel (pan : PPANEL) : Integer; cdecl; external libNCurses;
 
 implementation
 
