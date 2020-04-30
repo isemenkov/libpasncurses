@@ -236,6 +236,60 @@ const
   TRACE_DATABASE    { trace read/write of terminfo/termcap data }       = $0800;
   TRACE_ATTRS       { trace attribute updates }                         = $1000;
 
+  E_OK                                                                  = 0;
+  E_SYSTEM_ERROR                                                        = -1;
+  E_BAD_ARGUMENT                                                        = -2;
+  E_POSTED                                                              = -3;
+  E_CONNECTED                                                           = -4;
+  E_BAD_STATE                                                           = -5;
+  E_NO_ROOM                                                             = -6;
+  E_NOT_POSTED                                                          = -7;
+  E_UNKNOWN_COMMAND                                                     = -8;
+  E_NO_MATCH                                                            = -9;
+  E_NOT_SELECTABLE                                                      = -10;
+  E_NOT_CONNECTED                                                       = -11;
+  E_REQUEST_DENIED                                                      = -12;
+  E_INVALID_FIELD                                                       = -13;
+  E_CURRENT                                                             = -14;
+
+  { Menu options: }
+  O_ONEVALUE                                                            = $01;
+  O_SHOWDESC                                                            = $02;
+  O_ROWMAJOR                                                            = $04;
+  O_IGNORECASE                                                          = $08;
+  O_SHOWMATCH                                                           = $10;
+  O_NONCYCLIC                                                           = $20;
+  O_MOUSE_MENU                                                          = $40;
+
+  { Item options: }
+  O_SELECTABLE                                                          = $01;
+
+  { Define keys }
+  REQ_LEFT_ITEM                                                 = KEY_MAX + 1;
+  REQ_RIGHT_ITEM                                                = KEY_MAX + 2;
+  REQ_UP_ITEM                                                   = KEY_MAX + 3;
+  REQ_DOWN_ITEM                                                 = KEY_MAX + 4;
+  REQ_SCR_ULINE                                                 = KEY_MAX + 5;
+  REQ_SCR_DLINE                                                 = KEY_MAX + 6;
+  REQ_SCR_DPAGE                                                 = KEY_MAX + 7;
+  REQ_SCR_UPAGE                                                 = KEY_MAX + 8;
+  REQ_FIRST_ITEM                                                = KEY_MAX + 9;
+  REQ_LAST_ITEM                                                 = KEY_MAX + 10;
+  REQ_NEXT_ITEM                                                 = KEY_MAX + 11;
+  REQ_PREV_ITEM                                                 = KEY_MAX + 12;
+  REQ_TOGGLE_ITEM                                               = KEY_MAX + 13;
+  REQ_CLEAR_PATTERN                                             = KEY_MAX + 14;
+  REQ_BACK_PATTERN                                              = KEY_MAX + 15;
+  REQ_NEXT_MATCH                                                = KEY_MAX + 16;
+  REQ_PREV_MATCH                                                = KEY_MAX + 17;
+
+  MIN_MENU_COMMAND                                              = KEY_MAX + 1;
+  MAX_MENU_COMMAND                                              = KEY_MAX + 17;
+
+  { Some AT&T code expects MAX_COMMAND to be out-of-band not just for menu
+    commands but for forms ones as well. }
+  MAX_COMMAND                                                   = KEY_MAX + 128;
+
 type
   NCURSES_ATTR_T = type Integer;
 
@@ -368,6 +422,80 @@ type
     below : PPANEL;
     above : PPANEL;
     user : Pointer;
+  end;
+
+  Menu_Options = type Integer;
+  Item_Options = type Integer;
+
+  PTEXT = ^TEXT;
+  TEXT = record
+    str : PChar;
+    length : Word;
+  end;
+
+  PMENU = ^MENU;
+
+  PPITEM = ^PITEM;
+  PITEM = ^ITEM;
+  ITEM = record
+    name : TEXT;        { name of menu item }
+    description : TEXT; { description of item, optional in display }
+    imenu : PMENU;      { Pointer to parent menu }
+    userptr : Pointer;  { Pointer to user defined per item data }
+    opt : Item_Options; { Item options }
+    index : Smallint;   { Item number if connected to a menu }
+    y : Smallint;       { y and x location of item in menu }
+    x : Smallint;
+    value : Boolean;    { Selection value }
+
+    left : PITEM;       { neighbor items }
+    right : PITEM;
+    up : PITEM;
+    down : PITEM;
+  end;
+
+  Menu_Hook = procedure (mnu : PMENU) of object;
+
+  MENU = record
+    height : Smallint;  { Nr. of chars high }
+    width : Smallint;   { Nr. of chars wide }
+    rows : Smallint;    { Nr. of items high }
+    cols : Smallint;    { Nr. of items wide }
+    frows : Smallint;   { Nr. of formatted items high }
+    fcols : Smallint;   { Nr. of formatted items wide }
+    arows : Smallint;   { Nr. of items high (actual) }
+    namelen : Smallint; { Max. name length }
+    desclen : Smallint; { Max. description length }
+    marklen : Smallint; { Length of mark, if any }
+    itemlen : Smallint; { Length of one item }
+    spc_desc : Smallint;{ Spacing for descriptor }
+    spc_cols : Smallint;{ Spacing for columns }
+    spc_rows : Smallint;{ Spacing for rows }
+    pattern : PChar;    { Buffer to store match chars }
+    pindex : Smallint;  { Index into pattern buffer }
+    win : PWINDOW;      { Window containing menu }
+    sub : PWINDOW;      { Subwindow for menu display }
+    userwin : PWINDOW;  { User's window }
+    usersub : PWINDOW;  { User's subwindow }
+    items : PPITEM;     { array of items }
+    nitems : Smallint;  { Nr. of items in menu }
+    curitem : PITEM;    { Current item }
+    toprow : Smallint;  { Top row of menu }
+    fore : chtype;      { Selection attribute }
+    back : chtype;      { Nonselection attribute }
+    grey : chtype;      { Inactive attribute }
+    pad : Byte;         { Pad character }
+
+    menuinit : Menu_Hook; { User hooks }
+    menuterm : Menu_Hook;
+    iteminit : Menu_Hook;
+    itemterm : Menu_Hook;
+
+    userptr : Pointer;  { Pointer to menus user data }
+    mark : PChar;       { Pointer to marker string }
+
+    opt : Menu_Options; { Menu options }
+    status : Word;      { Internal state of menu }
   end;
 
   {$IFDEF WINDOWS}
@@ -2578,6 +2706,398 @@ type
   function panel_userptr (const pan : PPANEL) : Pointer; cdecl;
     external libNCurses;
   function del_panel (pan : PPANEL) : Integer; cdecl; external libNCurses;
+
+  { The function set_menu_items changes the item pointer array of the given
+    menu. The array must be terminated by a NULL.
+
+    The function menu_items returns the item array of the given menu.
+
+    The function item_count returns the count of items in menu.  }
+  function set_menu_items (menu : PMENU; items : PPITEM) : Integer; cdecl;
+    external libNCurses;
+  function menu_items (const menu : PMENU) : PPITEM; cdecl; external libNCurses;
+  function item_count (const menu : PMENU) : Integer; cdecl;
+    external libNCurses;
+
+  { The function set_current_item sets the current item (the item on which the
+    menu cursor is positioned). current_item returns a pointer to the current
+    item in the given menu.
+
+    The function set_top_row sets the top row of the menu to show the given row
+    (the top row is initially 0, and is reset to this value whenever the
+    O_ROWMAJOR option is toggled). The item leftmost on the given row becomes
+    current. The function top_row returns the number of the top menu row being
+    displayed.
+
+    The function item_index returns the (zero-origin) index of item in the
+    menu's item pointer list. }
+  function set_current_item (menu : PMENU; const item : PITEM) : Integer; cdecl;
+    external libNCurses;
+  function current_item (const menu : PMENU) : PITEM; cdecl;
+    external libNCurses;
+  function set_top_row (menu : PMENU; row : Integer) : Integer; cdecl;
+    external libNCurses;
+  function top_row (const menu : PMENU) : Integer; cdecl; external libNCurses;
+  function item_index (const item : PITEM) : Integer; cdecl;
+    external libNCurses;
+
+  { The function new_item allocates a new item and initializes it from the name
+    and description pointers. Please notice that the item stores only the
+    pointers to the name and description. Those pointers must be valid during
+    the lifetime of the item. So you should be very careful with names or
+    descriptions allocated on the stack of some routines. The function free_item
+    de-allocates an item. Please notice that it is the responsibility of the
+    application to release the memory for the name or the description of the
+    item. }
+  function new_item (const name : PChar; const description : PChar) : PITEM;
+    cdecl; external libNCurses;
+  function free_item (item : PITEM) : Integer; cdecl; external libNCurses;
+
+  { The function new_menu creates a new menu connected to a specified item
+    pointer array (which must be NULL-terminated).
+
+    The function free_menu disconnects menu from its item array and frees the
+    storage allocated for the menu. }
+  function new_menu (items : PPITEM) : PMENU; cdecl; external libNCurses;
+  function free_menu (menu : PMENU) : Integer; cdecl; external libNCurses;
+
+  { The function set_item_opts sets all the given item's option bits (menu
+    option bits may be logically-OR'ed together).
+
+    The function item_opts_on turns on the given option bits, and leaves others
+    alone.
+
+    The function item_opts_off turns off the given option bits, and leaves
+    others alone.
+
+    The function item_opts returns the item's current option bits.
+
+    There is only one defined option bit mask, O_SELECTABLE. When this is on,
+    the item may be selected during menu processing. This option defaults to
+    on. }
+  function set_item_opts (item : PITEM; opts : Item_Options) : Integer; cdecl;
+    external libNCurses;
+  function item_opts_on (item : PITEM; opts : Item_Options) : Integer; cdecl;
+    external libNCurses;
+  function item_opts_off (item : PITEM; opts : Item_Options) : Integer; cdecl;
+    external libNCurses;
+  function item_opts (const item : PITEM) : Item_Options; cdecl;
+    external libNCurses;
+
+  { The function set_menu_opts sets all the given menu's option bits (menu
+    option bits may be logically-OR'ed together).
+
+    The function menu_opts_on turns on the given option bits, and leaves others
+    alone.
+
+    The function menu_opts_off turns off the given option bits, and leaves
+    others alone.
+
+    The function menu_opts returns the menu's current option bits.
+
+    The following options are defined (all are on by default):
+
+    O_ONEVALUE
+        Only one item can be selected for this menu.
+    O_SHOWDESC
+        Display the item descriptions when the menu is posted.
+    O_ROWMAJOR
+        Display the menu in row-major order.
+    O_IGNORECASE
+        Ignore the case when pattern-matching.
+    O_SHOWMATCH
+        Move the cursor to within the item name while pattern-matching.
+    O_NONCYCLIC
+        Don't wrap around next-item and previous-item, requests to the other end
+        of the menu. }
+  function set_menu_opts (menu : PMENU; opts : Menu_Options) : Integer; cdecl;
+    external libNCurses;
+  function menu_opts_on (menu : PMENU; opts : Menu_Options) : Integer; cdecl;
+    external libNCurses;
+  function menu_opts_off (menu : PMENU; opts : Menu_Options) : Integer; cdecl;
+    external libNCurses;
+  function menu_opts (const menu : PMENU) : Menu_Options; cdecl;
+    external libNCurses;
+
+  { These functions make it possible to set hook functions to be called at
+    various points in the automatic processing of input event codes by
+    menu_driver.
+
+    The function set_item_init sets a hook to be called at menu-post time and
+    each time the selected item changes (after the change). item_init returns
+    the current item init hook, if any (NULL if there is no such hook).
+
+    The function set_item_term sets a hook to be called at menu-unpost time and
+    each time the selected item changes (before the change). item_term returns
+    the current item term hook, if any (NULL if there is no such hook).
+
+    The function set_menu_init sets a hook to be called at menu-post time and
+    just after the top row on the menu changes once it is posted. menu_init
+    returns the current menu init hook, if any (NULL if there is no such hook).
+
+    The function set_menu_term sets a hook to be called at menu-unpost time and
+    just before the top row on the menu changes once it is posted. menu_term
+    returns the current menu term hook, if any (NULL if there is no such
+    hook). }
+  function set_item_init (menu : PMENU; func : Menu_Hook) : Integer; cdecl;
+    external libNCurses;
+  function item_init (const menu : PMENU) : Menu_Hook; cdecl;
+    external libNCurses;
+  function set_item_term (menu : PMENU; func : Menu_Hook) : Integer; cdecl;
+    external libNCurses;
+  function item_term (const menu : PMENU) : Menu_Hook; cdecl;
+    external libNCurses;
+  function set_menu_init (menu : PMENU; func : Menu_Hook) : Integer; cdecl;
+    external libNCurses;
+  function menu_init (const menu : PMENU) : Menu_Hook; cdecl;
+    external libNCurses;
+  function set_menu_term (menu : PMENU; func : Menu_Hook) : Integer; cdecl;
+    external libNCurses;
+  function menu_term (const menu : PMENU) : Menu_Hook; cdecl;
+    external libNCurses;
+
+  { Every menu has an associated pair of curses windows. The menu window
+    displays any title and border associated with the window; the menu subwindow
+    displays the items of the menu that are currently available for selection.
+
+    The first four functions get and set those windows. It is not necessary to
+    set either window; by default, the driver code uses stdscr for both.
+
+    In the set_ functions, window argument of NULL is treated as though it were
+    stsdcr. A menu argument of NULL is treated as a request to change the system
+    default menu window or subwindow.
+
+    The function scale_menu returns the minimum size required for the subwindow
+    of menu. }
+  function set_menu_win (menu : PMENU; win : PWINDOW) : Integer; cdecl;
+    external libNCurses;
+  function menu_win (const menu : PMENU) : PWINDOW; cdecl; external libNCurses;
+  function set_menu_sub (menu : PMENU; sub : PWINDOW) : Integer; cdecl;
+    external libNCurses;
+  function menu_sub (const menu : PMENU) : PWINDOW; cdecl; external libNCurses;
+  function scale_menu (const menu : PMENU; rows : PInteger; columns : PInteger)
+    : Integer; cdecl; external libNCurses;
+
+  { The function item_name returns the name part of the given item.
+    The function item_description returns the description part of the given
+    item. }
+  function item_name (const item : PITEM) : PChar; cdecl; external libNCurses;
+  function item_description (const item : PITEM) : PChar; cdecl;
+    external libNCurses;
+
+  { In order to make menu selections visible on older terminals without
+    highlighting or color capability, the menu library marks selected items in a
+    menu with a prefix string.
+
+    The function set_menu_mark sets the mark string for the given menu. Calling
+    set_menu_mark with a null menu item will abolish the mark string. Note that
+    changing the length of the mark string for a menu while the menu is posted
+    is likely to produce unhelpful behavior.
+
+    The default string is "-" (a dash). Calling set_menu_mark with a non-NULL
+    menu argument will change this default.
+
+    The function menu_mark returns the menu's mark string (or NULL if there is
+    none). }
+  function set_menu_mark (menu : PMENU; const mark : PChar) : Integer; cdecl;
+    external libNCurses;
+  function menu_mark (const menu : PMENU) : PChar; cdecl; external libNCurses;
+
+  { The function menu_request_name returns the printable name of a menu request
+    code. The function menu_request_by_name searches in the name-table for a
+    request with the given name and returns its request code. Otherwise
+    E_NO_MATCH is returned. }
+  function menu_request_name (request : Integer) : PChar; cdecl;
+    external libNCurses;
+  function menu_request_by_name (const name : PChar) : Integer; cdecl;
+    external libNCurses;
+
+  { Every menu has an associated pattern match buffer. As input events that are
+    printable characters come in, they are appended to this match buffer and
+    tested for a match, as described in menu_driver.
+
+    The function set_menu_pattern sets the pattern buffer for the given menu and
+    tries to find the first matching item. If it succeeds, that item becomes
+    current; if not, the current item does not change.
+
+    The function menu_pattern returns the pattern buffer of the given menu. }
+  function set_menu_pattern (menu : PMENU; const pattern : PChar) : Integer;
+    cdecl; external libNCurses;
+  function menu_pattern (const menu : PMENU) : PChar; cdecl;
+    external libNCurses;
+
+  { Every menu and every menu item has a field that can be used to hold
+    application-specific data (that is, the menu-driver code leaves it alone).
+    These functions get and set the menu user pointer field. }
+  function set_menu_userptr (menu : PMENU; userptr : Pointer) : Integer; cdecl;
+    external libNCurses;
+  function menu_userptr (const menu : PMENU) : Pointer; cdecl;
+    external libNCurses;
+
+  { Every menu item has a field that can be used to hold application-specific
+    data (that is, the menu-driver code leaves it alone). These functions get
+    and set that field. }
+  function set_item_userptr (item : PITEM; userptr : Pointer) : Integer; cdecl;
+    external libNCurses;
+  function item_userptr (const item : PITEM) : Pointer; cdecl;
+    external libNCurses;
+
+  { The function set_menu_fore sets the foreground attribute of menu. This is
+    the highlight used for selected menu items. menu_fore returns the foreground
+    attribute. The default is A_REVERSE.
+
+    The function set_menu_back sets the background attribute of menu. This is
+    the highlight used for selectable (but not currently selected) menu items.
+    The function menu_back returns the background attribute. The default is
+    A_NORMAL.
+
+    The function set_menu_grey sets the grey attribute of menu. This is the
+    highlight used for un-selectable menu items in menus that permit more than
+    one selection. The function menu_grey returns the grey attribute. The
+    default is A_UNDERLINE.
+
+    The function set_menu_pad sets the character used to fill the space between
+    the name and description parts of a menu item. menu_pad returns the given
+    menu's pad character. The default is a blank. }
+  function set_menu_fore (menu : PMENU; attr : chtype) : Integer; cdecl;
+    external libNCurses;
+  function menu_fore (const menu : PMENU) : chtype; cdecl; external libNCurses;
+  function set_menu_back (menu : PMENU; attr : chtype) : Integer; cdecl;
+    external libNCurses;
+  function menu_back (const menu : PMENU) : chtype; cdecl; external libNCurses;
+  function set_menu_grey (menu : PMENU; attr : chtype) : Integer; cdecl;
+    external libNCurses;
+  function menu_grey (const menu : PMENU) : chtype; cdecl; external libNCurses;
+  function set_menu_pad (menu : PMENU; pad : Integer) : Integer; cdecl;
+    external libNCurses;
+  function menu_pad (const menu : PMENU) : Integer; cdecl; external libNCurses;
+
+  { Once a menu has been posted (displayed), you should funnel input events to
+    it through menu_driver. This routine has three major input cases:
+
+        - The input is a form navigation request. Navigation request codes are
+        constants defined in <form.h>, which are distinct from the key- and
+        character codes returned by wgetch.
+
+        - The input is a printable character. Printable characters (which must
+        be positive, less than 256) are checked according to the program's
+        locale settings.
+
+        - The input is the KEY_MOUSE special key associated with an mouse event.
+
+    The menu driver requests are as follows:
+        REQ_LEFT_ITEM
+            Move left to an item.
+        REQ_RIGHT_ITEM
+            Move right to an item.
+        REQ_UP_ITEM
+            Move up to an item.
+        REQ_DOWN_ITEM
+            Move down to an item.
+        REQ_SCR_ULINE
+            Scroll up a line.
+        REQ_SCR_DLINE
+            Scroll down a line.
+        REQ_SCR_DPAGE
+            Scroll down a page.
+        REQ_SCR_UPAGE
+            Scroll up a page.
+        REQ_FIRST_ITEM
+            Move to the first item.
+        REQ_LAST_ITEM
+            Move to the last item.
+        REQ_NEXT_ITEM
+            Move to the next item.
+        REQ_PREV_ITEM
+            Move to the previous item.
+        REQ_TOGGLE_ITEM
+            Select/deselect an item.
+        REQ_CLEAR_PATTERN
+            Clear the menu pattern buffer.
+        REQ_BACK_PATTERN
+            Delete the previous character from the pattern buffer.
+        REQ_NEXT_MATCH
+            Move to the next item matching the pattern match.
+        REQ_PREV_MATCH
+            Move to the previous item matching the pattern match.
+
+    If the second argument is a printable character, the code appends it to the
+    pattern buffer and attempts to move to the next item matching the new
+    pattern. If there is no such match, menu_driver returns E_NO_MATCH and
+    deletes the appended character from the buffer.
+
+    If the second argument is one of the above pre-defined requests, the
+    corresponding action is performed. }
+  function menu_driver (menu : PMENU; c : Integer) : Integer; cdecl;
+    external libNCurses;
+
+  { The function pos_menu_cursor restores the cursor to the current position
+    associated with the menu's selected item. This is useful after curses
+    routines have been called to do screen-painting in response to a menu
+    select. }
+  function pos_menu_cursor (const menu : PMENU) : Integer; cdecl;
+    external libNCurses;
+
+  { The function post_menu displays a menu to its associated subwindow. To
+    trigger physical display of the subwindow, use refresh or some equivalent
+    curses routine (the implicit doupdate triggered by an curses input request
+    will do). post_menu resets the selection status of all items.
+
+    The function unpost_menu erases menu from its associated subwindow. }
+  function post_menu (menu : PMENU) : Integer; cdecl; external libNCurses;
+  function unpost_menu (menu : PMENU) : Integer; cdecl; external libNCurses;
+
+  { If you turn off the menu option O_ONEVALUE (e.g., with set_menu_opts or
+    menu_opts_off; see menu_opts(3X)), the menu becomes multi-valued; that is,
+    more than one item may simultaneously be selected.
+
+    In a multi_valued menu, you can used set_item_value to select the given menu
+    item (second argument TRUE) or deselect it (second argument FALSE). }
+  function set_item_value (item : PITEM; value : Boolean) : Integer; cdecl;
+    external libNCurses;
+  function item_value (const item : PITEM) : Boolean; cdecl;
+    external libNCurses;
+
+  { The function set_menu_format sets the maximum display size of the given
+    menu. If this size is too small to display all menu items, the menu will be
+    made scrollable. If this size is larger than the menus subwindow and the
+    subwindow is too small to display all menu items, post_menu() will fail.
+
+    The default format is 16 rows, 1 column. Calling set_menu_format with a null
+    menu pointer will change this default. A zero row or column argument to
+    set_menu_format is interpreted as a request not to change the current value.
+
+    The function menu_format returns the maximum-size constraints for the given
+    menu into the storage addressed by rows and cols. }
+  function set_menu_format (menu : PMENU; rows : Integer; cols : Integer) :
+    Integer; cdecl; external libNCurses;
+  procedure menu_format (const menu : PMENU; rows : PInteger; cols : PInteger);
+    cdecl; external libNCurses;
+
+  { The function set_menu_spacing sets the spacing informations for the menu.
+    spc_description controls the number of spaces between an item name and an
+    item description. It must not be larger than TABSIZE. The menu system puts
+    in the middle of this spacing area the pad character. The remaining parts
+    are filled with spaces. spc_rows controls the number of rows that are used
+    for an item. It must not be larger than 3. The menu system inserts the blank
+    lines between item rows, these lines will contain the pad character in the
+    appropriate positions. spc_columns controls the number of blanks between
+    columns of items. It must not be larger than TABSIZE. A value of 0 for all
+    the spacing values resets them to the default, which is 1 for all of them.
+    The function menu_spacing passes back the spacing info for the menu. If a
+    pointer is NULL, this specific info is simply not returned. }
+  function set_menu_spacing (menu : PMENU; spc_description : Integer;
+    spc_rows : Integer; spc_columns : Integer) : Integer; cdecl;
+    external libNCurses;
+  function menu_spacing (const menu : PMENU; spc_description : PInteger;
+    spc_rows : PInteger; spc_columns : PInteger) : Integer; cdecl;
+    external libNCurses;
+
+  { A menu item is visible when it is in the portion of a posted menu that is
+    mapped onto the screen (if the menu is scrollable, in particular, this
+    portion will be smaller than the whole menu). }
+  function item_visible (const item : PITEM) : Boolean; cdecl;
+    external libNCurses;
 
 implementation
 
