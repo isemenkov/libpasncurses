@@ -498,6 +498,88 @@ type
     status : Word;      { Internal state of menu }
   end;
 
+  PFIELD_CELL = ^FIELD_CELL;
+  FIELD_CELL = type Pointer;
+
+  Form_Options = type Integer;
+  Field_Options = type Integer;
+
+  ppagenode = ^pagenode;
+  pagenode = record
+    pmin : Smallint;
+    pmax : Smallint;
+    smin : Smallint;
+    smax : Smallint;
+  end;
+  _PPAGE = ^_PAGE;
+  _PAGE = pagenode;
+
+  pformnode = ^formnode;
+  ptypenode = ^typenode;
+
+  pfieldnode = ^fieldnode;
+  fieldnode = record
+    status : Word;      { flags }
+    rows : Smallint;    { size in rows }
+    cols : Smallint;    { size in cols }
+    frow : Smallint;    { first row }
+    fcol : Smallint;    { first col }
+    drows : Integer;    { dynamic rows }
+    dcols : Integer;    { dynamic cols }
+    maxgrow : Integer;  { maximum field growth }
+    nrow : Integer;     { off-screen rows }
+    nbuf : Smallint;    { additional buffers }
+    just : Smallint;    { justification }
+    page : Smallint;    { page on form }
+    index : Smallint;   { into form -> field }
+    pad : Integer;      { pad character }
+    fore : chtype;      { foreground attribute }
+    back : chtype;      { background attribute }
+    opts : Field_Options;  { options }
+    snext : pfieldnode; { sorted order pointer }
+    sprev : pfieldnode; { sorted order pointer }
+    link : pfieldnode;  { linked field chain }
+    form : pformnode;   { containing form }
+    field_type : ptypenode; { field type }
+    arg : Pointer;      { argument for type }
+    buf : PFIELD_CELL;  { field buffers }
+    usrptr : Pointer;   { user pointer }
+  end;
+  PFIELD = ^FIELD;
+  PPFIELD = ^PFIELD;
+  FIELD = fieldnode;
+
+  forminit = procedure (node : pformnode) of object;
+  formterm = procedure (node : pformnode) of object;
+  fieldinit = procedure (node : pformnode) of object;
+  fieldterm = procedure (node : pformnode) of object;
+
+  formnode = record
+    status : Word;      { flags }
+    rows : Smallint;    { size in rows }
+    cols : Smallint;    { size in cols }
+    currow : Integer;   { current row in field window }
+    curcol : Integer;   { current col in field window }
+    toprow : Integer;   { in scrollable field window }
+    begincol : Integer; { in horiz. scrollable field }
+    maxfield : Smallint;{ number of fields }
+    maxpage : Smallint; { number of pages }
+    curpage : Smallint; { index into page }
+    opts : Form_Options;{ options }
+    win : PWINDOW;      { window }
+    sub : PWINDOW;      { subwindow }
+    w : PWINDOW;        { window for current field }
+    field : PPFIELD;    { field [maxfield] }
+    current : PFIELD;   { current field }
+    page : _PPAGE;      { page [maxpage] }
+    usrptr : Pointer;   { user pointer }
+
+    form_init : forminit;
+    form_term : formterm;
+    field_init : fieldinit;
+    field_term : fieldterm;
+  end;
+
   {$IFDEF WINDOWS}
     const libNCurses = 'libncurses.dll';
   {$ENDIF}
