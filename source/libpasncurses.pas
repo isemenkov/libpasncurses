@@ -290,6 +290,98 @@ const
     commands but for forms ones as well. }
   MAX_COMMAND                                                   = KEY_MAX + 128;
 
+  { field justification }
+  NO_JUSTIFICATION                                                      = 0;
+  JUSTIFY_LEFT                                                          = 1;
+  JUSTIFY_CENTER                                                        = 2;
+  JUSTIFY_RIGHT                                                         = 3;
+
+  { field options }
+  O_VISIBLE                                                             = $0001;
+  O_ACTIVE                                                              = $0002;
+  O_PUBLIC                                                              = $0004;
+  O_EDIT                                                                = $0008;
+  O_WRAP                                                                = $0010;
+  O_BLANK                                                               = $0020;
+  O_AUTOSKIP                                                            = $0040;
+  O_NULLOK                                                              = $0080;
+  O_PASSOK                                                              = $0100;
+  O_STATIC                                                              = $0200;
+  O_DYNAMIC_JUSTIFY { ncurses extension }                               = $0400;
+  O_NO_LEFT_STRIP   { ncurses extension }                               = $0800;
+  O_EDGE_INSERT_STAY{ ncurses extension }                               = $1000;
+  O_INPUT_LIMIT     { ncurses extension }                               = $2000;
+
+  { form options }
+  O_NL_OVERLOAD                                                         = $0001;
+  O_BS_OVERLOAD                                                         = $0002;
+
+  { form driver commands }
+  REQ_NEXT_PAGE     { move to next page }                       = KEY_MAX + 1;
+  REQ_PREV_PAGE     { move to previous page }                   = KEY_MAX + 2;
+  REQ_FIRST_PAGE    { move to first page }                      = KEY_MAX + 3;
+  REQ_LAST_PAGE     { move to last page }                       = KEY_MAX + 4;
+
+  REQ_NEXT_FIELD    { move to next field }                      = KEY_MAX + 5;
+  REQ_PREV_FIELD    { move to previous field }                  = KEY_MAX + 6;
+  REQ_FIRST_FIELD   { move to first field }                     = KEY_MAX + 7;
+  REQ_LAST_FIELD    { move to last field }                      = KEY_MAX + 8;
+  REQ_SNEXT_FIELD   { move to sorted next field }               = KEY_MAX + 9;
+  REQ_SPREV_FIELD   { move to sorted prev field }               = KEY_MAX + 10;
+  REQ_SFIRST_FIELD  { move to sorted first field }              = KEY_MAX + 11;
+  REQ_SLAST_FIELD   { move to sorted last field }               = KEY_MAX + 12;
+  REQ_LEFT_FIELD    { move to left to field }                   = KEY_MAX + 13;
+  REQ_RIGHT_FIELD   { move to right to field }                  = KEY_MAX + 14;
+  REQ_UP_FIELD      { move to up to field }                     = KEY_MAX + 15;
+  REQ_DOWN_FIELD    { move to down to field }                   = KEY_MAX + 16;
+
+  REQ_NEXT_CHAR     { move to next char in field }              = KEY_MAX + 17;
+  REQ_PREV_CHAR     { move to prev char in field }              = KEY_MAX + 18;
+  REQ_NEXT_LINE     { move to next line in field }              = KEY_MAX + 19;
+  REQ_PREV_LINE     { move to prev line in field }              = KEY_MAX + 20;
+  REQ_NEXT_WORD     { move to next word in field }              = KEY_MAX + 21;
+  REQ_PREV_WORD     { move to prev word in field }              = KEY_MAX + 22;
+  REQ_BEG_FIELD     { move to first char in field }             = KEY_MAX + 23;
+  REQ_END_FIELD     { move after last char in fld }             = KEY_MAX + 24;
+  REQ_BEG_LINE      { move to beginning of line }               = KEY_MAX + 25;
+  REQ_END_LINE      { move after last char in line }            = KEY_MAX + 26;
+  REQ_LEFT_CHAR     { move left in field }                      = KEY_MAX + 27;
+  REQ_RIGHT_CHAR    { move right in field }                     = KEY_MAX + 28;
+  REQ_UP_CHAR       { move up in field }                        = KEY_MAX + 29;
+  REQ_DOWN_CHAR     { move down in field }                      = KEY_MAX + 30;
+
+  REQ_NEW_LINE      { insert/overlay new line }                 = KEY_MAX + 31;
+  REQ_INS_CHAR      { insert blank char at cursor }             = KEY_MAX + 32;
+  REQ_INS_LINE      { insert blank line at cursor }             = KEY_MAX + 33;
+  REQ_DEL_CHAR      { delete char at cursor }                   = KEY_MAX + 34;
+  REQ_DEL_PREV      { delete char before cursor }               = KEY_MAX + 35;
+  REQ_DEL_LINE      { delete line at cursor }                   = KEY_MAX + 36;
+  REQ_DEL_WORD      { delete word at cursor }                   = KEY_MAX + 37;
+  REQ_CLR_EOL       { clear to end of line }                    = KEY_MAX + 38;
+  REQ_CLR_EOF       { clear to end of field }                   = KEY_MAX + 39;
+  REQ_CLR_FIELD     { clear entire field }                      = KEY_MAX + 40;
+  REQ_OVL_MODE      { begin overlay mode }                      = KEY_MAX + 41;
+  REQ_INS_MODE      { begin insert mode }                       = KEY_MAX + 42;
+  REQ_SCR_FLINE     { scroll field forward a line }             = KEY_MAX + 43;
+  REQ_SCR_BLINE     { scroll field backward a line }            = KEY_MAX + 44;
+  REQ_SCR_FPAGE     { scroll field forward a page }             = KEY_MAX + 45;
+  REQ_SCR_BPAGE     { scroll field backward a page }            = KEY_MAX + 46;
+  REQ_SCR_FHPAGE    { scroll field forward half page }          = KEY_MAX + 47;
+  REQ_SCR_BHPAGE    { scroll field backward half page }         = KEY_MAX + 48;
+  REQ_SCR_FCHAR     { horizontal scroll char }                  = KEY_MAX + 49;
+  REQ_SCR_BCHAR     { horizontal scroll char }                  = KEY_MAX + 50;
+  REQ_SCR_HFLINE    { horizontal scroll line }                  = KEY_MAX + 51;
+  REQ_SCR_HBLINE    { horizontal scroll line }                  = KEY_MAX + 52;
+  REQ_SCR_HFHALF    { horizontal scroll half line }             = KEY_MAX + 53;
+  REQ_SCR_HBHALF    { horizontal scroll half line }             = KEY_MAX + 54;
+
+  REQ_VALIDATION    { validate field }                          = KEY_MAX + 55;
+  REQ_NEXT_CHOICE   { display next field choice }               = KEY_MAX + 56;
+  REQ_PREV_CHOICE   { display prev field choice }               = KEY_MAX + 57;
+
+  MIN_FORM_COMMAND  { used by form_driver }                     = KEY_MAX + 1;
+  MAX_FORM_COMMAND  { used by form_driver }                     = KEY_MAX + 57;
+
 type
   NCURSES_ATTR_T = type Integer;
 
@@ -549,10 +641,10 @@ type
   PPFIELD = ^PFIELD;
   FIELD = fieldnode;
 
-  forminit = procedure (node : pformnode) of object;
-  formterm = procedure (node : pformnode) of object;
-  fieldinit = procedure (node : pformnode) of object;
-  fieldterm = procedure (node : pformnode) of object;
+  forminit_callback = procedure (node : pformnode) of object;
+  formterm_callback = procedure (node : pformnode) of object;
+  fieldinit_callback = procedure (node : pformnode) of object;
+  fieldterm_callback = procedure (node : pformnode) of object;
 
   formnode = record
     status : Word;      { flags }
@@ -574,11 +666,57 @@ type
     page : _PPAGE;      { page [maxpage] }
     usrptr : Pointer;   { user pointer }
 
-    form_init : forminit;
-    form_term : formterm;
-    field_init : fieldinit;
-    field_term : fieldterm;
+    forminit : forminit_callback;
+    formterm : formterm_callback;
+    fieldinit : fieldinit_callback;
+    fieldterm : fieldterm_callback;
   end;
+  PFORM = ^FORM;
+  FORM = formnode;
+
+  makearg_callback = function (args : array of const) : Pointer of object;
+  copyarg_callback = function (const ptr : Pointer) : Pointer of object;
+  freearg_callback = procedure (args : Pointer) of object;
+  fcheck_callback = function (fld : PFIELD; const ptr : Pointer) : Boolean
+    of object;
+  ccheck_callback = function (val : Integer; const ptr : Pointer) : Boolean
+    of object;
+  next_callback = function (fld : PFIELD; const ptr : Pointer) : Boolean
+    of object;
+  prev_callback = function (fld : PFIELD; const ptr : Pointer) : Boolean
+    of object;
+
+  typenode = record
+    status : Word;      { flags }
+    ref : Longint;      { reference count }
+    left : ptypenode;   { ptr to operand for | }
+    right: ptypenode;   { ptr to operand for | }
+    makearg : makearg_callback; { make fieldtype arg }
+    copyarg : copyarg_callback; { copy fieldtype arg }
+    freearg : freearg_callback; { free fieldtype arg }
+    fcheck : fcheck_callback;   { field validation }
+    ccheck : ccheck_callback;   { character validation }
+    next : next_callback;       { enumerate next value }
+    prev : prev_callback;       { enumerate prev value }
+  end;
+  PFIELDTYPE = ^FIELDTYPE;
+  FIELDTYPE = typenode;
+
+  Form_Hook = procedure (frm : PFORM) of object;
+
+  field_check_callback = function (fld : PFIELD; const ptr : Pointer) : Boolean
+    of object;
+  char_check_callback = function (val : Integer; const ptr : Pointer) : Boolean
+    of object;
+
+  var
+    TYPE_ALPHA : PFIELDTYPE; external;
+    TYPE_ALNUM : PFIELDTYPE; external;
+    TYPE_ENUM : PFIELDTYPE; external;
+    TYPE_INTEGER : PFIELDTYPE; external;
+    TYPE_NUMERIC : PFIELDTYPE; external;
+    TYPE_REGEXP : PFIELDTYPE; external;
+    TYPE_IPV4 : PFIELDTYPE; external;
 
   {$IFDEF WINDOWS}
     const libNCurses = 'libncurses.dll';
@@ -3180,6 +3318,77 @@ type
     portion will be smaller than the whole menu). }
   function item_visible (const item : PITEM) : Boolean; cdecl;
     external libNCurses;
+
+  { The function new_fieldtype creates a new field type usable for data
+    validation. You supply it with field_check, a predicate to check the
+    validity of an entered data string whenever the user attempts to leave a
+    field. The (FIELD *) argument is passed in so the validation predicate can
+    see the field's buffer, sizes and other attributes; the second argument is
+    an argument-block structure, about which more below.
+
+    You also supply new_fieldtype with char_check, a function to validate input
+    characters as they are entered; it will be passed the character to be
+    checked and a pointer to an argument-block structure.
+
+    The function free_fieldtype frees the space allocated for a given validation
+    type.
+
+    The function set_fieldtype_arg associates three storage-management functions
+    with a field type. The make_arg function is automatically applied to the
+    list of arguments you give set_field_type when attaching validation to a
+    field; its job is to bundle these into an allocated argument-block object
+    which can later be passed to validation predicated. The other two hook
+    arguments should copy and free argument-block structures. They will be used
+    by the forms-driver code. You must supply the make_arg function, the other
+    two are optional, you may supply NULL for them. In this case it is assumed
+    that make_arg does not allocate memory but simply loads the argument into a
+    single scalar value.
+
+    The function link_fieldtype creates a new field type from the two given
+    types. They are connected by an logical 'OR'.
+
+    The form driver requests REQ_NEXT_CHOICE and REQ_PREV_CHOICE assume that the
+    possible values of a field form an ordered set, and provide the forms user
+    with a way to move through the set. The set_fieldtype_choice function allows
+    forms programmers to define successor and predecessor functions for the
+    field type. These functions take the field pointer and an argument-block
+    structure as arguments. }
+  function new_fieldtype (field_check : field_check_callback; char_check :
+    char_check_callback) : PFIELDTYPE; cdecl; external libNCurses;
+  function free_fieldtype (fldtype : PFIELDTYPE) : Integer; cdecl;
+    external libNCurses;
+  function set_fieldtype_arg (make_arg : makearg_callback; copy_arg :
+    copyarg_callback; free_arg : freearg_callback) : Integer; cdecl;
+    external libNCurses;
+  function set_fieldtype_choice (fldtype : PFIELDTYPE; next_choice :
+    next_callback; prev_choice : prev_callback) : Integer; cdecl;
+    external libNCurses;
+  function link_fieldtype (type1 : PFIELDTYPE; type2 : PFIELDTYPE) : PFIELDTYPE;
+    cdecl; external libNCurses;
+
+  { The function new_field allocates a new field and initializes it from the
+    parameters given: height, width, row of upper-left corner, column of
+    upper-left corner, number off-screen rows, and number of additional working
+    buffers.
+
+    The function dup_field duplicates a field at a new location. Most attributes
+    (including current contents, size, validation type, buffer count, growth
+    threshold, justification, foreground, background, pad character, options,
+    and user pointer) are copied. Field status and the field page bit are not
+    copied.
+
+    The function link_field acts like dup_field, but the new field shares
+    buffers with its parent. Attribute data is separate.
+
+    The function free_field de-allocates storage associated with a field. }
+  function new_field (height : Integer; width : Integer; toprow : Integer;
+    leftcol : Integer; offscreen : Integer; nbuffers : Integer) : PFIELD; cdecl;
+    external libNCurses;
+  function dup_field (fld : PFIELD; toprow : Integer; leftcol : Integer) :
+    PFIELD; cdecl; external libNCurses;
+  function link_field (fld : PFIELD; toprow : Integer; leftcol : Integer) :
+    PFIELD; cdecl; external libNCurses;
+  function free_field (fld : PFIELD) : Integer; cdecl; external libNCurses;
 
 implementation
 
