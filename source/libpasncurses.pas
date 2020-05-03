@@ -3390,6 +3390,569 @@ type
     PFIELD; cdecl; external libNCurses;
   function free_field (fld : PFIELD) : Integer; cdecl; external libNCurses;
 
+  { The function field_info returns the sizes and other attributes passed in to
+    the field at its creation time. The attributes are: height, width, row of
+    upper-left corner, column of upper-left corner, number off-screen rows, and
+    number of working buffers.
+
+    The function dynamic_field_info returns the actual size of the field, and
+    its maximum possible size. If the field has no size limit, the location
+    addressed by the third argument will be set to 0. A field can be made
+    dynamic by turning off the O_STATIC option with field_opts_off. }
+  function field_info (const fld : PFIELD; rows : PInteger; cols : PInteger;
+    frow : PInteger; fcol : PInteger; nrow : PInteger; nbuf : PInteger) :
+    Integer; cdecl; external libNCurses;
+  function dynamic_field_info (const fld : PFIELD; rows : PInteger; cols :
+    PInteger; max : PInteger) : Integer; cdecl; external libNCurses;
+
+  { The function set_field_buffer sets the numbered buffer of the given field to
+    contain a given string:
+
+        - Buffer 0 is the displayed value of the field.
+        - Other numbered buffers may be allocated by applications through the
+        nbuf argument of (see form_field_new(3X)) but are not manipulated by the
+        forms library.
+
+    The function field_buffer returns a pointer to the contents of the given
+    numbered buffer:
+
+        - The buffer contents always have the same length, and are padded with
+        trailing spaces as needed to ensure this length is the same.
+        - The buffer may contain leading spaces, depending on how it was set.
+        - The buffer contents are set with set_field_buffer, or as a side effect
+        of any editing operations on the corresponding field.
+        - Editing operations are based on the window which displays the field,
+        rather than a string. The window contains only printable characters, and
+        is filled with blanks. If you want the raw data, you must write your own
+        routine that copies the value out of the buffer and removes the leading
+        and trailing spaces.
+        - Because editing operations change the content of the buffer to
+        correspond to the window, you should not rely on using buffers for
+        long-term storage of form data.
+
+    The function set_field_status sets the associated status flag of field;
+    field_status gets the current value. The status flag is set to a nonzero
+    value whenever the field changes.
+
+    The function set_max_field sets the maximum size for a dynamic field. An
+    argument of 0 turns off any maximum size threshold for that field. }
+  function set_field_buffer (fld : PFIELD; buf : Integer; const value : PChar) :
+    Integer; cdecl; external libNCurses;
+  function field_buffer (const fld : PFIELD; buffer : Integer) : PChar; cdecl;
+    external libNCurses;
+  function set_field_status (fld : PFIELD; status : Boolean) : Integer; cdecl;
+    external libNCurses;
+  function field_status (const fld : PFIELD) : Boolean; cdecl;
+    external libNCurses;
+  function set_max_field (fld : PFIELD; max : Integer) : Integer; cdecl;
+    external libNCurses;
+
+  { The function set_form_fields changes the field pointer array of the given
+    form. The array must be terminated by a NULL.
+
+    The function form_fields returns the field array of the given form.
+
+    The function field_count returns the count of fields in form.
+
+    The function move_field moves the given field (which must be disconnected)
+    to a specified location on the screen. }
+  function set_form_fields (frm : PFORM; flds : PPFIELD) : Integer; cdecl;
+    external libNCurses;
+  function form_fields (const frm : PFORM) : PPFIELD; cdecl;
+    external libNCurses;
+  function field_count (const frm : PFORM) : Integer; cdecl;
+    external libNCurses;
+  function move_field (fld : PFIELD; frow : Integer; fcol : Integer) : Integer;
+    cdecl; external libNCurses;
+
+  { The function set_field_type declares a data type for a given form field.
+    This is the type checked by validation functions. The predefined types are
+    as follows:
+
+    TYPE_ALNUM
+        Alphanumeric data. Requires a third int argument, a minimum field width.
+    TYPE_ALPHA
+        Character data. Requires a third int argument, a minimum field width.
+    TYPE_ENUM
+        Accept one of a specified set of strings. Requires a third (char **)
+        argument pointing to a string list; a fourth int flag argument to enable
+        case-sensitivity; and a fifth int flag argument specifying whether a
+        partial match must be a unique one (if this flag is off, a prefix
+        matches the first of any set of more than one list elements with that
+        prefix). Please notice that the string list is not copied, only a
+        reference to it is stored in the field. So you should avoid using a list
+        that lives in automatic variables on the stack.
+    TYPE_INTEGER
+        Integer data, parsable to an integer by atoi(3). Requires a third int
+        argument controlling the precision, a fourth long argument constraining
+        minimum value, and a fifth long constraining maximum value. If the
+        maximum value is less than or equal to the minimum value, the range is
+        simply ignored. On return the field buffer is formatted according to the
+        printf format specification ".*ld", where the '*' is replaced by the
+        precision argument. For details of the precision handling see printf's
+        man-page.
+    TYPE_NUMERIC
+        Numeric data (may have a decimal-point part). Requires a third int
+        argument controlling the precision, a fourth double argument
+        constraining minimum value, and a fifth double constraining maximum
+        value. If your system supports locales, the decimal point character to
+        be used must be the one specified by your locale. If the maximum value
+        is less than or equal to the minimum value, the range is simply ignored.
+        On return the field buffer is formatted according to the printf format
+        specification ".*f", where the '*' is replaced by the precision
+        argument. For details of the precision handling see printf's man-page.
+    TYPE_REGEXP
+        Regular expression data. Requires a regular expression (char *) third
+        argument; the data is valid if the regular expression matches it.
+        Regular expressions are in the format of regcomp and regexec. Please
+        notice that the regular expression must match the whole field. If you
+        have for example an eight character wide field, a regular expression
+        "^[0-9]*$" always means that you have to fill all eight positions with
+        digits. If you want to allow fewer digits, you may use for example
+        "^[0-9]* *$" which is good for trailing spaces (up to an empty field),
+        or "^ *[0-9]* *$" which is good for leading and trailing spaces around
+        the digits.
+    TYPE_IPV4
+        An Internet Protocol Version 4 address. This requires no additional
+        argument. It is checked whether or not the buffer has the form a.b.c.d,
+        where a,b,c and d are numbers between 0 and 255. Trailing blanks in the
+        buffer are ignored. The address itself is not validated. Please note
+        that this is an ncurses extension. This field type may not be available
+        in other curses implementations.
+
+    It is possible to set up new programmer-defined field types. See the
+    form_fieldtype manual page. }
+  function set_field_type (fld : PFIELD; fld_type : PFIELDTYPE) : Integer;
+    cdecl; varargs; external libNCurses;
+  function field_type (const fld : PFIELD) : PFIELDTYPE; cdecl;
+    external libNCurses;
+  function field_arg (const fld : PFIELD) : Pointer; cdecl; external libNCurses;
+
+  { The function set_new_page sets or resets a flag marking the given field as
+    the beginning of a new page on its form.
+
+    The function new_page is a predicate which tests if a given field marks a
+    page beginning on its form. }
+  function set_new_page (fld : PFIELD; new_page_flag : Boolean) : Integer;
+    cdecl; external libNCurses;
+  function new_page (const fld : PFIELD) : Boolean; cdecl; external libNCurses;
+
+  { The function set_field_just sets the justification attribute of a field;
+    field_just returns a field's justification attribute. The attribute may be
+    one of NO_JUSTIFICATION, JUSTIFY_RIGHT, JUSTIFY_LEFT, or JUSTIFY_CENTER. }
+  function set_field_just (fld : PFIELD; justification : Integer) : Integer;
+    cdecl; external libNCurses;
+  function field_just (const fld : PFIELD) : Integer; cdecl;
+    external libNCurses;
+
+  { The function set_field_fore sets the foreground attribute of field. This is
+    the highlight used to display the field contents. The function field_fore
+    returns the foreground attribute. The default is A_STANDOUT.
+
+    The function set_field_back sets the background attribute of form. This is
+    the highlight used to display the extent fields in the form. The function
+    field_back returns the background attribute. The default is A_NORMAL.
+
+    The function set_field_pad sets the character used to fill the field. The
+    function field_pad returns the given form's pad character. The default is a
+    blank. }
+  function set_field_fore (fld : PFIELD; attr : chtype) : Integer; cdecl;
+    external libNCurses;
+  function field_fore (const fld : PFIELD) : chtype; cdecl; external libNCurses;
+  function set_field_back (fld : PFIELD; attr : chtype) : Integer; cdecl;
+    external libNCurses;
+  function field_back (const fld : PFIELD) : chtype; cdecl; external libNCurses;
+  function set_field_pad (fld : PFIELD; pad : Integer) : Integer; cdecl;
+    external libNCurses;
+  function field_pad (const fld : PFIELD) : Integer; cdecl; external libNCurses;
+
+  { Every form field has a field that can be used to hold application-specific
+    data (that is, the form-driver code leaves it alone). These functions get
+    and set that field. }
+  function set_field_userptr (fld : PFIELD; userptr : Pointer) : Integer; cdecl;
+    external libNCurses;
+  function field_userptr (const fld : PFIELD) : Pointer; cdecl;
+    external libNCurses;
+
+  { The function set_field_opts sets all the given field's option bits (field
+    option bits may be logically-OR'ed together).
+
+    The function field_opts_on turns on the given option bits, and leaves others
+    alone.
+
+    The function field_opts_off turns off the given option bits, and leaves
+    others alone.
+
+    The function field_opts returns the field's current option bits.
+
+    The following options are defined (all are on by default):
+
+    O_VISIBLE
+        The field is displayed. If this option is off, display of the field is
+        suppressed.
+    O_ACTIVE
+        The field is visited during processing. If this option is off, the field
+        will not be reachable by navigation keys. Please notice that an
+        invisible field appears to be inactive also.
+    O_PUBLIC
+        The field contents are displayed as data is entered.
+    O_EDIT
+        The field can be edited.
+    O_WRAP
+        Words that do not fit on a line are wrapped to the next line. Words are
+        blank-separated.
+    O_BLANK
+        The field is cleared whenever a character is entered at the first
+        position.
+    O_AUTOSKIP
+        Skip to the next field when this one fills.
+    O_NULLOK
+        Allow a blank field.
+    O_STATIC
+        Field buffers are fixed to field's original size. Turn this option off
+        to create a dynamic field.
+    O_PASSOK
+        Validate field only if modified by user. }
+  function set_field_opts (fld : PFIELD; opts : Field_Options) : Integer; cdecl;
+    external libNCurses;
+  function field_opts_on (fld : PFIELD; opts : Field_Options) : Integer; cdecl;
+    external libNCurses;
+  function field_opts_off (fld : PFIELD; opts : Field_Options) : Integer; cdecl;
+    external libNCurses;
+  function field_opts (const fld : PFIELD) : Field_Options; cdecl;
+    external libNCurses;
+
+  { The function new_form creates a new form connected to a specified field
+    pointer array (which must be NULL-terminated).
+
+    The function free_form disconnects form from its field array and frees the
+    storage allocated for the form. }
+  function new_form (fld : PPFIELD) : PFORM; cdecl; external libNCurses;
+  function free_form (frm : PFORM) : Integer; cdecl; external libNCurses;
+
+  { The function set_current field sets the current field of the given form;
+    current_field returns the current field of the given form.
+
+    The function set_form_page sets the form's page number (goes to page n of
+    the form).
+
+    The function form_page returns the form's current page number.
+
+    The function field_index returns the index of the field in the field array
+    of the form it is connected to. It returns ERR if the argument is the null
+    pointer or the field is not connected. }
+  function set_current_field (frm : PFORM; fld : PFIELD) : Integer; cdecl;
+    external libNCurses;
+  function current_field (const frm : PFORM) : PFIELD; cdecl;
+    external libNCurses;
+  function set_form_page (frm : PFORM; n : Integer) : Integer; cdecl;
+    external libNCurses;
+  function form_page (const frm : PFORM) : Integer; cdecl; external libNCurses;
+  function field_index (const fld : PFIELD) : Integer; cdecl;
+    external libNCurses;
+
+  { Every form has an associated pair of curses windows. The form window
+    displays any title and border associated with the window; the form subwindow
+    displays the items of the form that are currently available for selection.
+
+    The first four functions get and set those windows. It is not necessary to
+    set either window; by default, the driver code uses stdscr for both.
+
+    In the set_ functions, window argument of NULL is treated as though it were
+    stsdcr. A form argument of NULL is treated as a request to change the system
+    default form window or subwindow.
+
+    The function scale_form returns the minimum size required for the subwindow
+    of form. }
+  function set_form_win (frm : PFORM; win : PWINDOW) : Integer; cdecl;
+    external libNCurses;
+  function form_win (const frm : PFORM) : PWINDOW; cdecl; external libNCurses;
+  function set_form_sub (frm : PFORM; sub : PWINDOW) : Integer; cdecl;
+    external libNCurses;
+  function form_sub (const frm : PFORM) : PWINDOW; cdecl; external libNCurses;
+  function scale_form (const frm : PFORM; rows : PInteger; columns : PInteger) :
+    Integer; cdecl; external libNCurses;
+
+  { These functions make it possible to set hook functions to be called at
+    various points in the automatic processing of input event codes by
+    form_driver.
+
+    The function set_field_init sets a hook to be called at form-post time and
+    each time the selected field changes (after the change). field_init returns
+    the current field init hook, if any (NULL if there is no such hook).
+
+    The function set_field_term sets a hook to be called at form-unpost time and
+    each time the selected field changes (before the change). field_term returns
+    the current field term hook, if any (NULL if there is no such hook).
+
+    The function set_form_init sets a hook to be called at form-post time and
+    just after a page change once it is posted. form_init returns the current
+    form init hook, if any (NULL if there is no such hook).
+
+    The function set_form_term sets a hook to be called at form-unpost time and
+    just before a page change once it is posted. form_init returns the current
+    form term hook, if any (NULL if there is no such hook). }
+  function set_field_init (frm : PFORM; func : Form_Hook) : Integer; cdecl;
+    external libNCurses;
+  function field_init (const frm : PFORM) : Form_Hook; cdecl;
+    external libNCurses;
+  function set_field_term (frm : PFORM; func : Form_Hook) : Integer; cdecl;
+    external libNCurses;
+  function field_term (const frm : PFORM) : Form_Hook; cdecl;
+    external libNCurses;
+  function set_form_init (frm : PFORM; func : Form_Hook) : Integer; cdecl;
+    external libNCurses;
+  function form_init (const frm : PFORM) : Form_Hook; cdecl;
+    external libNCurses;
+  function set_form_term (frm : PFORM; func : Form_Hook) : Integer; cdecl;
+    external libNCurses;
+  function form_term (const frm : PFORM) : Form_Hook; cdecl;
+    external libNCurses;
+
+  function unfocus_current_field (frm : PFORM) : Integer; cdecl;
+    external libNCurses;
+
+  { The function post_form displays a form to its associated subwindow. To
+    trigger physical display of the subwindow, use refresh or some equivalent
+    curses routine (the implicit doupdate triggered by an curses input request
+    will do).
+
+    The function unpost_form erases form from its associated subwindow. }
+  function post_form (frm : PFORM) : Integer; cdecl; external libNCurses;
+  function unpost_form (frm : PFORM) : Integer; cdecl; external libNCurses;
+
+  { The function pos_form_cursor restores the cursor to the position required
+    for the forms driver to continue processing requests. This is useful after
+    curses routines have been called to do screen-painting in response to a form
+    operation. }
+  function pos_form_cursor (frm : PFORM) : Integer; cdecl; external libNCurses;
+
+  { Once a form has been posted (displayed), you should funnel input events to
+    it through form_driver. This routine has three major input cases:
+
+        - The input is a form navigation request. Navigation request codes are
+        constants defined in <form.h>, which are distinct from the key- and
+        character codes returned by wgetch.
+        - The input is a printable character. Printable characters (which must
+        be positive, less than 256) are checked according to the program's
+        locale settings.
+        - The input is the KEY_MOUSE special key associated with an mouse event.
+
+    The form driver requests are as follows:
+    REQ_NEXT_PAGE
+        Move to the next page.
+    REQ_PREV_PAGE
+        Move to the previous page.
+    REQ_FIRST_PAGE
+        Move to the first page.
+    REQ_LAST_PAGE
+        Move to the last field.
+    REQ_NEXT_FIELD
+        Move to the next field.
+    REQ_PREV_FIELD
+        Move to the previous field.
+    REQ_FIRST_FIELD
+        Move to the first field.
+    REQ_LAST_FIELD
+        Move to the last field.
+    REQ_SNEXT_FIELD
+        Move to the sorted next field.
+    REQ_SPREV_FIELD
+        Move to the sorted previous field.
+    REQ_SFIRST_FIELD
+        Move to the sorted first field.
+    REQ_SLAST_FIELD
+        Move to the sorted last field.
+    REQ_LEFT_FIELD
+        Move left to a field.
+    REQ_RIGHT_FIELD
+        Move right to a field.
+    REQ_UP_FIELD
+        Move up to a field.
+    REQ_DOWN_FIELD
+        Move down to a field.
+    REQ_NEXT_CHAR
+        Move to the next char.
+    REQ_PREV_CHAR
+        Move to the previous char.
+    REQ_NEXT_LINE
+        Move to the next line.
+    REQ_PREV_LINE
+        Move to the previous line.
+    REQ_NEXT_WORD
+        Move to the next word.
+    REQ_PREV_WORD
+        Move to the previous word.
+    REQ_BEG_FIELD
+        Move to the beginning of the field.
+    REQ_END_FIELD
+        Move to the end of the field.
+    REQ_BEG_LINE
+        Move to the beginning of the line.
+    REQ_END_LINE
+        Move to the end of the line.
+    REQ_LEFT_CHAR
+        Move left in the field.
+    REQ_RIGHT_CHAR
+        Move right in the field.
+    REQ_UP_CHAR
+        Move up in the field.
+    REQ_DOWN_CHAR
+        Move down in the field.
+    REQ_NEW_LINE
+        Insert or overlay a new line.
+    REQ_INS_CHAR
+        Insert a blank at the cursor.
+    REQ_INS_LINE
+        Insert a blank line at the cursor.
+    REQ_DEL_CHAR
+        Delete character at the cursor.
+    REQ_DEL_PREV
+        Delete character before the cursor.
+    REQ_DEL_LINE
+        Delete line at the cursor.
+    REQ_DEL_WORD
+        Delete blank-delimited word at the cursor.
+    REQ_CLR_EOL
+        Clear to end of line from cursor.
+    REQ_CLR_EOF
+        Clear to end of field from cursor.
+    REQ_CLR_FIELD
+        Clear the entire field.
+    REQ_OVL_MODE
+        Enter overlay mode.
+    REQ_INS_MODE
+        Enter insert mode.
+    REQ_SCR_FLINE
+        Scroll the field forward a line.
+    REQ_SCR_BLINE
+        Scroll the field backward a line.
+    REQ_SCR_FPAGE
+        Scroll the field forward a page.
+    REQ_SCR_BPAGE
+        Scroll the field backward a page.
+    REQ_SCR_FHPAGE
+        Scroll the field forward half a page.
+    REQ_SCR_BHPAGE
+        Scroll the field backward half a page.
+    REQ_SCR_FCHAR
+        Scroll the field forward a character.
+    REQ_SCR_BCHAR
+        Scroll the field backward a character.
+    REQ_SCR_HFLINE
+        Horizontal scroll the field forward a line.
+    REQ_SCR_HBLINE
+        Horizontal scroll the field backward a line.
+    REQ_SCR_HFHALF
+        Horizontal scroll the field forward half a line.
+    REQ_SCR_HBHALF
+        Horizontal scroll the field backward half a line.
+    REQ_VALIDATION
+        Validate field.
+    REQ_NEXT_CHOICE
+        Display next field choice.
+    REQ_PREV_CHOICE
+        Display previous field choice.
+
+    If the second argument is a printable character, the driver places it in the
+    current position in the current field. If it is one of the forms requests
+    listed above, that request is executed.
+
+    MOUSE HANDLING
+
+    If the second argument is the KEY_MOUSE special key, the associated mouse
+    event is translated into one of the above pre-defined requests. Currently
+    only clicks in the user window (e.g. inside the form display area or the
+    decoration window) are handled.
+
+    If you click above the display region of the form:
+        a REQ_PREV_FIELD is generated for a single click,
+        a REQ_PREV_PAGE is generated for a double-click and
+        a REQ_FIRST_FIELD is generated for a triple-click.
+    If you click below the display region of the form:
+        a REQ_NEXT_FIELD is generated for a single click,
+        a REQ_NEXT_PAGE is generated for a double-click and
+        a REQ_LAST_FIELD is generated for a triple-click.
+
+    If you click at an field inside the display area of the form:
+        - the form cursor is positioned to that field.
+        - If you double-click a field, the form cursor is positioned to that
+        field and E_UNKNOWN_COMMAND is returned. This return value makes sense,
+        because a double click usually means that an field-specific action
+        should be returned. It is exactly the purpose of this return value to
+        signal that an application specific command should be executed.
+        - If a translation into a request was done, form_driver returns the
+        result of this request.
+
+    If you clicked outside the user window or the mouse event could not be
+    translated into a form request an E_REQUEST_DENIED is returned.
+
+    APPLICATION-DEFINED COMMANDS
+
+    If the second argument is neither printable nor one of the above pre-defined
+    form requests, the driver assumes it is an application-specific command and
+    returns E_UNKNOWN_COMMAND. Application-defined commands should be defined
+    relative to MAX_COMMAND, the maximum value of these pre-defined requests. }
+  function form_driver (frm : PFORM; c : Integer) : Integer; cdecl;
+    external libNCurses;
+
+  { Every form and every form item has a field that can be used to hold
+    application-specific data (that is, the form-driver code leaves it alone).
+    These functions get and set the form user pointer field. }
+
+  function set_form_userptr (frm : PFORM; userptr : Pointer) : Integer; cdecl;
+    external libNCurses;
+  function form_userptr (const frm : PFORM) : Pointer; cdecl;
+    external libNCurses;
+
+  { The function set_form_opts sets all the given form's option bits (form
+    option bits may be logically-OR'ed together).
+
+    The function form_opts_on turns on the given option bits, and leaves others
+    alone.
+
+    The function form_opts_off turns off the given option bits, and leaves
+    others alone.
+
+    The function form_opts returns the form's current option bits.
+
+    The following options are defined (all are on by default):
+
+    O_NL_OVERLOAD
+        Overload the REQ_NEW_LINE forms driver request so that calling it at the
+        end of a field goes to the next field.
+    O_BS_OVERLOAD
+        Overload the REQ_DEL_PREV forms driver request so that calling it at the
+        beginning of a field goes to the previous field. }
+  function set_form_opts (frm : PFORM; opts : Field_Options) : Integer; cdecl;
+    external libNCurses;
+  function form_opts_on (frm : PFORM; opts : Field_Options) : Integer; cdecl;
+    external libNCurses;
+  function form_opts_off (frm : PFORM; opts : Field_Options) : Integer; cdecl;
+    external libNCurses;
+  function form_opts (const frm : PFORM) : Field_Options; cdecl;
+    external libNCurses;
+
+  { The function form_request_name returns the printable name of a form request
+    code.
+
+    The function form_request_by_name searches in the name-table for a request
+    with the given name and returns its request code. Otherwise E_NO_MATCH is
+    returned. }
+  function form_request_name (request : Integer) : PChar; cdecl;
+    external libNCurses;
+  function form_request_by_name (const name : PChar) : Integer; cdecl;
+    external libNCurses;
+
+  { The function data_ahead tests whether there is off-screen data ahead in the
+    given form. It returns TRUE (1) or FALSE (0).
+
+    The function data_behind tests whether there is off-screen data behind in
+    the given form. It returns TRUE (1) or FALSE (0). }
+  function data_ahead (const frm : PFORM) : Boolean; cdecl; external libNCurses;
+  function data_behind (const frm : PFORM) : Boolean; cdecl;
+    external libNCurses;
+
 implementation
 
 end.
