@@ -9,8 +9,6 @@ The Curses library forms a wrapper over working with raw terminal codes, and pro
 * [Requierements](#requirements)
 * [Installation](#installation)
 * [Usage](#usage)
-* [Testing](#testing)
-* [Examples](#examples)
 * [Bindings](#bindings)
 
 
