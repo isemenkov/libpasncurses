@@ -1,6 +1,6 @@
-# libpasncurses
+# libPasnCurses
 
-The Curses library forms a wrapper over working with raw terminal codes, and provides highly flexible and efficient API (Application Programming Interface). It provides functions to move the cursor, create windows, produce colors, play with mouse etc. The application programs need not worry about the underlying terminal capabilities.
+libPasnCurses is delphi and object pascal bindings around [nCurses](https://invisible-island.net/ncurses/) library. The nCurses library is a wrapper over working with raw terminal codes, and provides highly flexible and efficient API (Application Programming Interface). It provides functions to move the cursor, create windows, produce colors, play with mouse etc. The application programs need not worry about the underlying terminal capabilities.
 
 
 
@@ -15,16 +15,22 @@ The Curses library forms a wrapper over working with raw terminal codes, and pro
 
 ### Requirements
 
+* [Embarcadero (R) Rad Studio](https://www.embarcadero.com)
 * [Free Pascal Compiler](http://freepascal.org)
-* [Lazarus IDE](http://www.lazarus.freepascal.org/) (optional)
+* [Lazarus IDE](http://www.lazarus.freepascal.org/)
 
-Library is tested with latest stable FreePascal Compiler (currently 3.2.0) and Lazarus IDE (currently 2.0.10).
+
+
+Library is tested for 
+
+- Embarcadero (R) Delphi 10.3 on Windows 7 Service Pack 1 (Version 6.1, Build 7601, 64-bit Edition)
+- FreePascal Compiler (3.2.0) and Lazarus IDE (2.0.10) on Ubuntu Linux 5.8.0-33-generic x86_64
 
 
 
 ### Installation
 
-Get the sources and add the *source* directory to the *fpc.cfg* file.
+Get the sources and add the *source* directory to the project search path. For FPC add the *source* directory to the *fpc.cfg* file.
 
 
 

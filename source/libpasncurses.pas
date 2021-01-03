@@ -26,7 +26,9 @@
 
 unit libpasncurses;
 
-{$mode objfpc}{$H+}
+{$IFDEF FPC}
+  {$mode objfpc}{$H+}
+{$ENDIF}
 
 interface
 
@@ -35,6 +37,22 @@ uses
 
 {$IFDEF FPC}
   {$PACKRECORDS C}
+{$ENDIF}
+
+{$IFDEF FPC}
+  {$IFDEF WINDOWS}
+    const libNCurses = 'libncursesw6.dll';
+  {$ENDIF}
+  {$IFDEF LINUX}
+    const libNCurses = 'libncurses.so';
+  {$ENDIF}
+{$ELSE}
+  {$IFDEF MSWINDOWS OR defined(MSWINDOWS)}
+    const libNCurses = 'libncursesw6.dll';
+  {$ENDIF}
+  {$IFDEF LINUX}
+    const libNCurses = 'libncurses.so';
+  {$ENDIF}  
 {$ENDIF}
 
 const
@@ -90,6 +108,25 @@ const
   A_TOP                                           = 1 shl (21 + 8);
   A_VERTICAL                                      = 1 shl (22 + 8);
   A_ITALIC                                        = 1 shl (23 + 8);
+
+  WA_ATTRIBUTES                                   = A_ATTRIBUTES;
+  WA_NORMAL                                       = A_NORMAL;
+  WA_STANDOUT                                     = A_STANDOUT;
+  WA_UNDERLINE                                    = A_UNDERLINE;
+  WA_REVERSE                                      = A_REVERSE;
+  WA_BLINK                                        = A_BLINK;
+  WA_DIM                                          = A_DIM;
+  WA_BOLD                                         = A_BOLD;
+  WA_ALTCHARSET                                   = A_ALTCHARSET;
+  WA_INVIS                                        = A_INVIS;
+  WA_PROTECT                                      = A_PROTECT;
+  WA_HORIZONTAL                                   = A_HORIZONTAL;
+  WA_LEFT                                         = A_LEFT;
+  WA_LOW                                          = A_LOW;
+  WA_RIGHT                                        = A_RIGHT;
+  WA_TOP                                          = A_TOP;
+  WA_VERTICAL                                     = A_VERTICAL;
+  WA_ITALIC                                       = A_ITALIC;
 
   { Pseudo-character tokens outside ASCII range.  The curses wgetch() function
     will return any given one of these only if the corresponding k- capability
@@ -440,6 +477,7 @@ type
   cchar_t = record
     attr : attr_t;
     chars : array [0..CCHARW_MAX] of WideChar;
+    ext_color : Integer;
   end;
 
   _win_st = record
@@ -484,6 +522,7 @@ type
     _yoffset : NCURSES_SIZE_T;     { real begy is _begy + _yoffset }
 
     _bkgrnd : cchar_t;             { current background char/attribute pair }
+    _color : Integer;              { current color-pair for non-space character}
   end;
 
   WINDOW = _win_st;
@@ -709,6 +748,7 @@ type
   char_check_callback = function (val : Integer; const ptr : Pointer) : Boolean
     of object;
 
+{
   var
     TYPE_ALPHA : PFIELDTYPE; external;
     TYPE_ALNUM : PFIELDTYPE; external;
@@ -717,14 +757,7 @@ type
     TYPE_NUMERIC : PFIELDTYPE; external;
     TYPE_REGEXP : PFIELDTYPE; external;
     TYPE_IPV4 : PFIELDTYPE; external;
-
-  {$IFDEF WINDOWS}
-    const libNCurses = 'libncurses.dll';
-  {$ENDIF}
-  {$IFDEF LINUX}
-    const libNCurses = 'libncurses.so';
-  {$ENDIF}
-
+}
   { Function prototypes.  This is the complete X/Open Curses list of required
     functions.  Those marked `generated' will have sources generated from the
     macro definitions later in this file, in order to satisfy XPG4.2
